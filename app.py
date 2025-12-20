@@ -1,43 +1,51 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد الواجهة (نفس ما تحب)
+# إعدادات الصفحة والواجهة
 st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
+
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
 st.markdown("---")
 
-# 2. إعداد المفتاح
+# جلب المفتاح السري من Streamlit
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("المفتاح غير موجود!")
+    st.error("أحمد! المفتاح السري ناقص في الـ Secrets. ضيفه عشان أقدر أتكلم.")
     st.stop()
 
-# 3. استخدام الموديل المتطور اللي طلع في قائمتك (رقم 3)
-model = genai.GenerativeModel('models/gemini-2.0-flash')
+# اختيار الموديل المستقر والسريع
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 4. ذاكرة الدردشة
+# ذاكرة الدردشة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# عرض المحادثة
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. التفاعل
-if prompt := st.chat_input("موه حالك؟"):
+# التفاعل مع المستخدم
+if prompt := st.chat_input("موه حالك؟ اكتب شي هنا..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     try:
         with st.chat_message("assistant"):
-            # تعليمات للهجة العمانية
-            full_prompt = f"أنت ذكاء اصطناعي اسمك أحمد AI، صممك أحمد بن بدر الصالحي. تكلم باللهجة العمانية فقط: {prompt}"
+            # التعليمات السرية لـ أحمد AI
+            instruction = (
+                "أنت ذكاء اصطناعي اسمك Ahmed AI. "
+                "المبرمج العماني أحمد بن بدر الصالحي هو من اخترعك وصممك. "
+                "تكلم باللهجة العمانية فقط بأسلوب ودي ومحترم. "
+                f"سؤال المستخدم: {prompt}"
+            )
             
-            response = model.generate_content(full_prompt)
+            response = model.generate_content(instruction)
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
     except Exception as e:
-        st.error(f"يا بوبدر صار خطأ بسيط: {e}")
+        st.error(f"يا بوبدر فيه مشكلة بسيطة: {e}")
