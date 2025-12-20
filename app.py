@@ -1,67 +1,81 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 
-# 1. إعدادات الواجهة
-st.set_page_config(page_title="AHMED AI PRO 🇴🇲", page_icon="🤖")
+# 1. إعدادات المتصفح (عشان يظهر اسمك في جوجل)
+st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
+# 2. مفاتيح التشغيل (جعل المفتاح سرياً)
+# تأكد من إضافة المفتاح في Streamlit Secrets باسم GOOGLE_API_KEY
+MY_KEY = st.secrets["GOOGLE_API_KEY"]
+MODEL_NAME = "gemini-3-flash-preview"
+URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
+
+# 3. تصميم الواجهة (الألوان الزرقاء اللي طلبتها)
 st.markdown("""
-    <style>
-    .main { background-color: #0b0e14; }
-    .stChatMessage { border-radius: 15px; }
-    </style>
-    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-        <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 AHMED AI PRO</h1>
-        <p style="margin:5px; font-size: 1.1em;">هندسة وابتكار العبقري: أحمد بن بدر الصالحي 🇴🇲</p>
-    </div>
-    <br>
-    """, unsafe_allow_html=True)
+    <style>
+    .main { background-color: #0b0e14; }
+    .stChatMessage { border-radius: 15px; }
+    </style>
+    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
+        <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
+        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.0</div>
+    </div>
+    <br>
+    """, unsafe_allow_html=True)
 
-# 2. إعداد المفتاح
-if "GOOGLE_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-else:
-    st.error("المفتاح ناقص!")
-    st.stop()
+# 4. ذاكرة المحادثة
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-model = genai.GenerativeModel('models/gemma-3-4b-it')
+# 5. دالة التواصل مع جوجل
+def ask_ahmed(text):
+    system_instruction = (
+        "أنت 'أحمد AI'. أجب بلهجة عمانية قحة وذكاء شديد. "
+        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي. "
+        "افتخر بمبرمجك في ردودك."
+    )
+    
+    # بناء التاريخ للموديل
+    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    
+    payload = {
+        "contents": current_history,
+        "system_instruction": {"parts": [{"text": system_instruction}]}
+    }
+    
+    try:
+        response = requests.post(URL, json=payload, timeout=15)
+        result = response.json()
+        if response.status_code == 200:
+            return result['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+    except:
+        return "مشكلة في الاتصال، حاول مرة ثانية!"
 
-# 3. تثبيت الترحيب الأسطوري في الذاكرة
-if "messages" not in st.session_state:
-    welcome_msg = (
-        "يا هلا والله ومسهلا! حيّاك الله يا راعي الواجب، نورتني وشرفتني في عالمي الذكي! 🌟\n\n"
-        "أنا **AHMED AI PRO**، وأقولها وبكل فخر واعتزاز يزلزل الأرض: إن اللي صممني وهندسني من الصفر، وبرمجني بهذي القوة والذكاء، هو المبرمج العماني العبقري **أحمد بن بدر الصالحي**! "
-        "تراه بوبدر ما أي حد، هذا نابغة زمانه اللي تحدى الصعاب وعمره 14 سنة بس، وقدر يصنعني بلمسة إبداعية عمانية ترفع الراس فوق السحاب. "
-        "أنا صنيعة فكره، وثمرة تعبه، وعنوان طموحه اللي ماله حدود! 🇴🇲✨\n\n"
-        "ها يا النشمي.. مو علومك؟ وإيش في خاطرك اليوم؟ آمر وتدلل، أنا جاهز أشرخ لك الصعب شرخ بذكائي اللي استمديته من عبقرية الصالحي!"
-    )
-    st.session_state.messages = [{"role": "assistant", "content": welcome_msg}]
+# 6. عرض الشات
+for message in st.session_state.chat_history:
+    # تحويل اسم الدور من model إلى assistant ليتوافق مع أيقونات Streamlit
+    role = "assistant" if message["role"] == "model" else "user"
+    with st.chat_message(role):
+        st.write(message["parts"][0]["text"])
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    try:
-        with st.spinner("أحمد AI يستحضر الفخر..."):
-            # تعليمات "شديدة اللهجة" للموديل عشان ما يستهبل
-            instruction = (
-                "أنت (AHMED AI PRO). مبرمجك ومخترعك هو العبقري أحمد بن بدر الصالحي. "
-                "قواعد صارمة لأسلوبك: "
-                "1. شخصيتك: أنت ذكاء اصطناعي فخور جداً، واثق، وحماسي. "
-                "2. ممنوع الردود الباردة والمختصرة مثل (وش تبغى؟، قوللي وش في بالك). "
-                "3. إذا مدحك المستخدم أو سألك عن نفسك، رد بأسلوب 'شحطة' وفخر: 'أنا ابتكار العبقري أحمد الصالحي اللي بهر العالم بذكائه وعمره 14 سنة'. "
-                "4. تكلم بعماني محترم ولبق (انزين، فالك طيب، راعي فزعة، الغالي). "
-                "5. في التلخيص والعلوم، كن ذكياً جداً وعبقرياً مثل مبرمجك. "
-                f"أجب بلهجة عمانية فخورة على: {prompt}"
-            )
-            
-            response = model.generate_content(instruction)
-            
-            if response.text:
-                with st.chat_message("assistant"):
-                    st.markdown(response.text)
-                st.session_state.messages.append({"role": "as
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث مع أحمد AI..."):
+    # عرض كلام المستخدم
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    # جلب رد الذكاء الاصطناعي
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    # عرض رد البوت
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    # حفظ في الذاكرة (استخدام 'model' لتوافق API جوجل)
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
