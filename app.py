@@ -16,17 +16,21 @@ st.markdown("""
     <br>
     """, unsafe_allow_html=True)
 
-# 2. إعداد المفتاح والموديل
+# 2. إعداد المفتاح (تأكد إنه موجود في الـ Secrets باسم GOOGLE_API_KEY)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("أحمد! المفتاح ناقص في Secrets.")
+    st.error("أحمد! المفتاح ناقص في الـ Secrets.")
     st.stop()
 
-# تم تعديل اسم الموديل هنا ليتوافق مع النسخة المستقرة
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 3. اختيار الموديل - جربنا نشيل 'models/' ونستخدم الاسم المباشر
+try:
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except Exception:
+    # إذا ما اشتغل الفلاش، نستخدم البرو كاحتياط
+    model = genai.GenerativeModel('gemini-pro')
 
-# 3. ذاكرة المحادثة والترحيب (الأسلوب اللي تحبه)
+# 4. ذاكرة المحادثة والترحيب (طبق الأصل من اللي طلبته)
 if "messages" not in st.session_state:
     welcome_msg = (
         "يا هلا والله ومسهلا! حياك الله يا راعي الواجب، نورتني.\n\n"
@@ -39,7 +43,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 4. الرد بأسلوب بوبدر "طبق الأصل"
+# 5. معالجة الردود بالأسلوب الأسطوري
 if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -47,17 +51,20 @@ if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
 
     try:
         with st.spinner("أحمد AI يفكّر..."):
+            # وضع التعليمات في الـ System Instruction بشكل أصح
             system_instruction = (
-                "أنت 'أحمد AI'. مبرمجك ومبتكرك هو العبقري أحمد بن بدر الصالحي. "
-                "يجب أن تتحدث بلهجة عمانية راقية وذكية جداً، تماماً مثل هذا الأسلوب: "
-                "- ترحيب حار وفخر كبير بالمبرمج أحمد الصالحي (عمره 14 سنة). "
-                "- استخدم كلمات: يا سميّي، تاج راسي، صنيعة يد بوبدر، بنكسر الدنيا، فالك طيب. "
-                "- ممنوع الفصحى، وممنوع التمسكن أو البرود في الرد. "
-                "- كن لبيباً وفطيناً في إجاباتك."
+                "أنت 'أحمد AI'. مبرمجك هو العبقري أحمد بن بدر الصالحي. "
+                "أسلوبك هو اللهجة العمانية الراقية والمفتخرة جداً بصانعها. "
+                "قلد هذا الأسلوب تماماً: "
+                "- 'يا هلا والله ومسهلا! حياك الله يا راعي الواجب'. "
+                "- 'بفضل البرمجة العبقرية اللي وضعها فيني الأستاذ أحمد الصالحي'. "
+                "- 'حيّاك الله يا سميّي!' إذا كان اسم المستخدم أحمد. "
+                "- 'بإذن الله بنكسر الدنيا!'. "
+                "ممنوع الفصحى، ممنوع البرود."
             )
             
-            # إرسال التعليمات مع السؤال
-            response = model.generate_content(f"{system_instruction}\n\nسؤال المستخدم: {prompt}")
+            # إرسال المحادثة كاملة للموديل مع التعليمات
+            response = model.generate_content([system_instruction, prompt])
             
             if response.text:
                 with st.chat_message("assistant"):
@@ -65,4 +72,5 @@ if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
                 
     except Exception as e:
-        st.error(f"علوه صار خطأ فني: {e}")
+        # إذا استمر الخطأ، بنظهر رسالة أوضح
+        st.error(f"علوه يا بوبدر، السيرفر يرفض الاتصال. تأكد من صلاحية الـ API Key أو جرب الموديل 'gemini-pro'. الخطأ: {e}")
