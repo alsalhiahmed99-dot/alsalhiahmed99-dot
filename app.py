@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد الواجهة
+# 1. إعداد الواجهة (نفس ما تحب)
 st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
@@ -11,14 +11,13 @@ st.markdown("---")
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("المفتاح غير موجود في Secrets!")
+    st.error("المفتاح غير موجود!")
     st.stop()
 
-# 3. اختيار الموديل (استخدمنا الاسم المباشر عشان نتفادى خطأ 404)
-# هذا الاسم يشتغل مع النسخة المستقرة v1
-model = genai.GenerativeModel('gemini-pro')
+# 3. استخدام الموديل المتطور اللي طلع في قائمتك (رقم 3)
+model = genai.GenerativeModel('models/gemini-2.0-flash')
 
-# 4. الذاكرة
+# 4. ذاكرة الدردشة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -34,12 +33,11 @@ if prompt := st.chat_input("موه حالك؟"):
 
     try:
         with st.chat_message("assistant"):
-            # طلب الرد بأبسط طريقة ممكنة
-            response = model.generate_content(f"تكلم بالعماني: {prompt}")
+            # تعليمات للهجة العمانية
+            full_prompt = f"أنت ذكاء اصطناعي اسمك أحمد AI، صممك أحمد بن بدر الصالحي. تكلم باللهجة العمانية فقط: {prompt}"
+            
+            response = model.generate_content(full_prompt)
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        # إذا استمر الخطأ، بنخلي البرنامج يخبرنا شو هي الموديلات المتاحة لحسابك بالضبط
-        st.error("أحمد، حسابك يحتاج موديل محدد. هذي هي الموديلات اللي تقدر تستخدمها:")
-        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        st.write(available_models)
+        st.error(f"يا بوبدر صار خطأ بسيط: {e}")
