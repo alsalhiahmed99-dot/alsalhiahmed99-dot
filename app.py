@@ -1,17 +1,13 @@
 import streamlit as st
 import requests
-import json
 
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (المفتاح سري)
+# 2. مفتاح التشغيل (جيبه من السيكرتس)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-# غيرنا الموديل هنا عشان نتخلص من رسالة "ضغط الشبكة"
-MODEL_NAME = "gemini-1.5-flash"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة (الألوان الزرقاء)
+# 3. تصميم الواجهة الزرقاء
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -28,30 +24,27 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل (معدلة عشان ما يكرر اسمه)
+# 5. دالة التواصل (المسار الصحيح 100%)
 def ask_ahmed(text):
-    system_instruction = (
-        "أنت مساعد ذكي جداً. أجب بلهجة عمانية قحة. "
-        "ممنوع نهائياً تقول 'أنا أحمد AI' أو تذكر اسمك في الرد. "
-        "ادخل في الموضوع وجاوب مباشرة. "
-        "تذكر دائماً أن مبرمجك ومخترعك هو العبقري أحمد بن بدر الصالحي وافتخر به بأسلوب ذكي."
-    )
+    # الرابط الرسمي لموديل 1.5 فلاش (المسار v1beta)
+    URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={MY_KEY}"
     
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
-    
+    # التعليمات (بدون ظهور الاسم في الرد)
+    system_prompt = "أنت مساعد ذكي بلهجة عمانية قحة. لا تذكر اسمك في الرد أبداً. مبرمجك هو أحمد الصالحي."
+
     payload = {
-        "contents": current_history,
-        "system_instruction": {"parts": [{"text": system_instruction}]}
+        "contents": [{"parts": [{"text": text}]}],
+        "system_instruction": {"parts": [{"text": system_prompt}]}
     }
-    
+
     try:
         response = requests.post(URL, json=payload, timeout=15)
         result = response.json()
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            # إذا استمرت المشكلة، بيظهر لك سبب الخطأ الحقيقي هنا
-            return f"يا بوبدر فيه مشكلة بسيطة في السيرفر (كود {response.status_code})"
+            # بيطلع لك السبب الحقيقي هنا لو فشل
+            return f"خطأ {response.status_code}: {result.get('error', {}).get('message', 'مشكلة في السيرفر')}"
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
