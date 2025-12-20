@@ -1,21 +1,19 @@
 import streamlit as st
 import google.generativeai as genai
 
-# إعداد الواجهة الجميلة مالك
 st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
 st.markdown("---")
 
-# التأكد من المفتاح
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("أحمد، المفتاح ما موجود في Secrets!")
+    st.error("المفتاح ناقص!")
     st.stop()
 
-# السر هنا: اخترنا موديل 2.0-flash-lite لأنه سريع وما يزعل بسرعة
-model = genai.GenerativeModel('models/gemini-2.0-flash-lite-preview-02-05')
+# بنستخدم موديل Gemma لأنه خفيف جداً وما عليه زحمة (رقم 13 في قائمتك)
+model = genai.GenerativeModel('models/gemma-3-4b-it')
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -31,12 +29,12 @@ if prompt := st.chat_input("موه حالك؟"):
 
     try:
         with st.chat_message("assistant"):
-            # إرسال الطلب
-            response = model.generate_content(f"أنت أحمد AI، تكلم بالعماني: {prompt}")
+            # تعليمات واضحة للهجة العمانية
+            response = model.generate_content(f"تكلم بالعماني كأنك أحمد AI: {prompt}")
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
         if "429" in str(e):
-            st.warning("يا أحمد، السيرفر عليه زحمة، انتظر 20 ثانية وجرب مرة ثانية.")
+            st.warning("الزحمة بعدها مستمرة.. انتظر 10 ثواني بس وبيرد عليك.")
         else:
             st.error(f"صار خطأ: {e}")
