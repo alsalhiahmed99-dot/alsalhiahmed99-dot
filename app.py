@@ -8,10 +8,12 @@ from PIL import Image
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (المفتاح سري في Secrets)
-MY_KEY = st.secrets["GOOGLE_API_KEY"]
-TEXT_MODEL = "gemini-1.5-flash" 
-IMAGE_MODEL = "imagen-3.0-generate-001" 
+# 2. مفاتيح التشغيل (يتم جلب المفتاح من Secrets)
+try:
+    MY_KEY = st.secrets["GOOGLE_API_KEY"]
+except:
+    st.error("أوهو! مفتاح الـ API ما محطوط في Secrets. تأكد من إعداده!")
+    st.stop()
 
 # 3. تصميم الواجهة الزرقاء (لمسة أحمد الصالحي)
 st.markdown("""
@@ -30,40 +32,41 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل المطورة
+# 5. دالة التواصل (المسار المباشر والمضمون)
 def ask_ahmed(text):
-    # كشف نية المستخدم للصور
+    # كشف نية الصور
     if any(word in text for word in ["صورة", "صمم", "ارسم", "image", "draw"]):
         return "GENERATE_IMAGE_LOGIC"
 
-    # رابط الـ API
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{TEXT_MODEL}:generateContent?key={MY_KEY}"
+    # الرابط المباشر لموديل 1.5 فلاش
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={MY_KEY}"
+    
+    headers = {'Content-Type': 'application/json'}
     
     system_instruction = (
         "أنت مساعد ذكي جداً. أجب بلهجة عمانية قحة وذكاء شديد. "
-        "ممنوع أن تقول 'أنا أحمد AI' في بداية ردك أو وسطه. "
         "تذكر دائماً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي. "
         "افتخر بمبرمجك أحمد الصالحي دائماً بأسلوب طبيعي."
     )
     
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
-    
+    # بناء محتوى الطلب
     payload = {
-        "contents": current_history,
+        "contents": [{"parts": [{"text": text}]}],
         "system_instruction": {"parts": [{"text": system_instruction}]}
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=15)
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
         result = response.json()
         
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            # إظهار الخطأ الحقيقي للمساعدة في الحل
-            return f"خطأ برمجني (Code {response.status_code}): تأكد من مفتاح الـ API"
+            # إظهار رسالة الخطأ من جوجل مباشرة للفهم
+            error_msg = result.get('error', {}).get('message', 'خطأ غير معروف')
+            return f"خطأ {response.status_code}: {error_msg}"
     except Exception as e:
-        return f"يا بوبدر فيه مشكلة فنية: {str(e)}"
+        return f"يا بوبدر فيه مشكلة في الاتصال: {str(e)}"
 
 # 6. عرض الشات
 for message in st.session_state.chat_history:
@@ -75,18 +78,3 @@ for message in st.session_state.chat_history:
 if prompt := st.chat_input("تحدث مع أحمد AI..."):
     with st.chat_message("user"):
         st.write(prompt)
-    
-    with st.spinner("جاري الاستجابة..."):
-        res = ask_ahmed(prompt)
-    
-    if res == "GENERATE_IMAGE_LOGIC":
-        with st.chat_message("assistant"):
-            st.write(f"أبشر يا بوبدر! طلبت صورة لـ: **{prompt}**")
-            st.info("ميزة توليد الصور بنفعلها بالكامل أول يوم في الإجازة بعد ما تخلص اختباراتك! 🚀")
-    else:
-        with st.chat_message("assistant"):
-            st.write(res)
-        
-        # حفظ الذاكرة
-        st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-        st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
