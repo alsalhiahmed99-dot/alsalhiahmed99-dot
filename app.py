@@ -13,7 +13,7 @@ else:
     st.stop()
 
 # 3. اختيار الموديل
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-pro')
 
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
