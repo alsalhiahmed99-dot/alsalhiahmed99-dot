@@ -4,7 +4,6 @@ import google.generativeai as genai
 # 1. إعدادات الواجهة (خلفية بيضاء وتنسيق نظيف)
 st.set_page_config(page_title="AHMED AI PRO 🇴🇲", page_icon="🤖", layout="centered")
 
-# تصميم CSS لتنسيق الفقاعات وإخفاء الأسماء والأيقونات
 st.markdown("""
     <style>
     .stApp { background-color: #ffffff; }
@@ -15,6 +14,7 @@ st.markdown("""
         max-width: 85%;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
+    /* كلام المستخدم يمين */
     div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
         margin-left: auto;
         background-color: #e3f2fd !important;
@@ -22,6 +22,7 @@ st.markdown("""
         direction: rtl;
         border: 1px solid #bbdefb;
     }
+    /* كلام البوت يسار */
     div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
         margin-right: auto;
         background-color: #f5f5f5 !important;
@@ -29,8 +30,9 @@ st.markdown("""
         direction: rtl;
         border: 1px solid #eeeeee;
     }
-    [data-testid="chatAvatarIcon-user"], [data-testid="chatAvatarIcon-assistant"] { display: none; }
-    [data-testid="stChatMessage"] h2 { display: none; }
+    /* إخفاء الأيقونات والأسماء */
+    [data-testid="chatAvatarIcon-user"], [data-testid="chatAvatarIcon-assistant"], .st-emotion-cache-10o0f9z { display: none; }
+    
     .header-box {
         background: linear-gradient(to right, #1e3a8a, #3b82f6);
         padding: 25px;
@@ -55,7 +57,6 @@ else:
     st.error("المفتاح ناقص في الإعدادات!")
     st.stop()
 
-# نستخدم الموديل اللي ضبط معك سابقا
 model = genai.GenerativeModel('models/gemma-3-4b-it')
 
 # 3. الترحيب العام للجمهور
@@ -65,28 +66,4 @@ if "messages" not in st.session_state:
         "أنا مساعدك الذكي، من ابتكار وهندسة المبرمج العماني النابغة **أحمد بن بدر الصالحي**. "
         "آمرني الغالي، ويش في خاطرك اليوم؟ أنا جاهز لكل تساؤلاتك بلمسة عمانية أصيلة!"
     )
-    st.session_state.messages = [{"role": "assistant", "content": welcome_msg}]
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# 4. استقبال كلام المستخدم
-if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    try:
-        with st.spinner("أحمد AI يقدح بذكاء..."):
-            instruction = (
-                f"أنت (AHMED AI PRO). مبرمجك هو العبقري أحمد بن بدر الصالحي. "
-                f"تكلم بلهجة عمانية بيضاء راقية وفخورة. "
-                f"خاطب المستخدم بأسلوب طيب (الغالي، النشمي، فالك طيب). "
-                f"إذا سألك عن هويتك، افتخر بأنك من تصميم أحمد الصالحي وعمره 14 سنة. "
-                f"أجب بذكاء على: {prompt}"
-            )
-            response = model.generate_content(instruction)
-            if response.text:
-                with st.chat_message("assistant"):
-                    st
+    st.session_state.messages = [{"role
