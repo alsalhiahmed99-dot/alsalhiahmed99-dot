@@ -11,10 +11,7 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 # 2. مفاتيح التشغيل (المفتاح سري في Secrets)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 TEXT_MODEL = "gemini-1.5-flash" 
-# ملاحظة: موديل الصور يحتاج إعداد خاص في Google Cloud سنكمله في الإجازة
 IMAGE_MODEL = "imagen-3.0-generate-001" 
-
-TEXT_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{TEXT_MODEL}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة الزرقاء (لمسة أحمد الصالحي)
 st.markdown("""
@@ -33,17 +30,20 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل الذكية
+# 5. دالة التواصل المطورة
 def ask_ahmed(text):
-    # كشف نية المستخدم: هل يريد صورة؟
+    # كشف نية المستخدم للصور
     if any(word in text for word in ["صورة", "صمم", "ارسم", "image", "draw"]):
         return "GENERATE_IMAGE_LOGIC"
 
+    # رابط الـ API
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{TEXT_MODEL}:generateContent?key={MY_KEY}"
+    
     system_instruction = (
         "أنت مساعد ذكي جداً. أجب بلهجة عمانية قحة وذكاء شديد. "
         "ممنوع أن تقول 'أنا أحمد AI' في بداية ردك أو وسطه. "
         "تذكر دائماً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي. "
-        "افتخر بمبرمجك أحمد الصالحي وبذكائه وفطنته دائماً بأسلوب طبيعي."
+        "افتخر بمبرمجك أحمد الصالحي دائماً بأسلوب طبيعي."
     )
     
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
@@ -54,38 +54,39 @@ def ask_ahmed(text):
     }
     
     try:
-        response = requests.post(TEXT_URL, json=payload, timeout=15)
+        response = requests.post(url, json=payload, timeout=15)
         result = response.json()
+        
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
-    except:
-        return "مشكلة في الاتصال، حاول مرة ثانية!"
+            # إظهار الخطأ الحقيقي للمساعدة في الحل
+            return f"خطأ برمجني (Code {response.status_code}): تأكد من مفتاح الـ API"
+    except Exception as e:
+        return f"يا بوبدر فيه مشكلة فنية: {str(e)}"
 
-# 6. عرض الشات (التاريخ)
+# 6. عرض الشات
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة والمعالجة
-if prompt := st.chat_input("تحدث مع أحمد AI أو اطلب صورة..."):
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث مع أحمد AI..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("جاري التفكير..."):
+    with st.spinner("جاري الاستجابة..."):
         res = ask_ahmed(prompt)
     
     if res == "GENERATE_IMAGE_LOGIC":
         with st.chat_message("assistant"):
-            st.write(f"أبشر يا بوبدر! أنت تطلب صورة لـ: **{prompt}**")
-            st.info("ميزة توليد الصور الفنية قيد التفعيل النهائي.. بنشغلها بالكامل أول يوم في الإجازة! 🚀")
-            # 
+            st.write(f"أبشر يا بوبدر! طلبت صورة لـ: **{prompt}**")
+            st.info("ميزة توليد الصور بنفعلها بالكامل أول يوم في الإجازة بعد ما تخلص اختباراتك! 🚀")
     else:
         with st.chat_message("assistant"):
             st.write(res)
         
-        # حفظ في الذاكرة فقط إذا كان رداً نصياً
+        # حفظ الذاكرة
         st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
         st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
