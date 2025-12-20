@@ -2,27 +2,43 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# 1. تحميل المفتاح السري من ملف .env
+# 1. تحميل الإعدادات من ملف .env (عشان المفتاح يكون سري)
 load_dotenv()
 my_key = os.getenv("GOOGLE_API_KEY")
 
-# 2. إعداد الذكاء الاصطناعي
+# 2. إعداد Gemini
 genai.configure(api_key=my_key)
-
-# 3. اختيار الموديل (Gemini)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-def start_ahmed_ai():
-    print("--- AHMED-AI جاهز للعمل يا بطل ---")
+# 3. تعريف شخصية التطبيق (هنا السر في اللهجة العمانية)
+SYSTEM_PROMPT = """
+أنت ذكاء اصطناعي اسمك (Ahmed AI). 
+صممك واخترعك المبرمج العماني البطل أحمد بن بدر الصالحي.
+لازم تتكلم باللهجة العمانية القحة (مثلاً تقول: موه حالك، راعي فزعة، هود هود، تم تم).
+إذا سألك أحد من صممك؟ قل: صممني المبرمج العماني أحمد بن بدر الصالحي.
+خلك محفز وذكي وشاطر مثل مصممك.
+"""
+
+def start_chat():
+    print("--- Ahmed AI بدأ يشتغل يا بوبدر! 🇴🇲 ---")
+    # بدء محادثة مع ذاكرة
+    chat = model.start_chat(history=[])
+    
     while True:
-        user_input = input("أحمد (أنت): ")
+        user_input = input("أنت: ")
+        
         if user_input.lower() in ['exit', 'خروج', 'quit']:
+            print("مع السلامة يا بطل، نشوفك على خير!")
             break
         
-        # إرسال السؤال للذكاء الاصطناعي
-        response = model.generate_content(user_input)
+        # دمج الشخصية مع سؤال المستخدم
+        full_query = f"{SYSTEM_PROMPT}\nالمستخدم يسأل: {user_input}"
         
-        print(f"\nAhmed AI: {response.text}\n")
+        try:
+            response = chat.send_message(full_query)
+            print(f"\nAhmed AI: {response.text}\n")
+        except Exception as e:
+            print(f"صار خطأ بسيط، تأكد من مفتاح الـ API: {e}")
 
 if __name__ == "__main__":
-    start_ahmed_ai()
+    start_chat()
