@@ -9,7 +9,7 @@ st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
 # 2. تحميل المفتاح السري
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
 
 # 3. شخصية التطبيق
 SYSTEM_PROMPT = "أنت (Ahmed AI)، مبرمجك هو البطل أحمد بن بدر الصالحي. تكلم باللهجة العمانية القحة وكن فخوراً بمصممك."
