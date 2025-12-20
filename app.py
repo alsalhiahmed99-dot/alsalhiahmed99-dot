@@ -1,8 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
-from google.generativeai.types import RequestOptions
 
-# 1. إعداد الواجهة
+# 1. إعداد الواجهة (بسيطة وجميلة نفس أول)
 st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
@@ -15,8 +14,12 @@ else:
     st.error("المفتاح غير موجود في Secrets!")
     st.stop()
 
-# 3. اختيار الموديل مع إجبار نسخة API v1 (هذا هو الحل للـ 404)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 3. محاولة تعريف الموديل بأكثر طريقة مباشرة
+# شلنا كلمة models/ وشلنا الإصدارات التجريبية
+try:
+    model = genai.GenerativeModel('gemini-1.5-flash')
+except:
+    model = genai.GenerativeModel('gemini-pro')
 
 # 4. ذاكرة الدردشة
 if "messages" not in st.session_state:
@@ -27,28 +30,19 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # 5. التفاعل
-if prompt := st.chat_input("موه حالك؟"):
+if prompt := st.chat_input("موه حالك؟ اكتب شي..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     try:
         with st.chat_message("assistant"):
-            # إجبار الطلب على استخدام نسخة v1 بدلاً من v1beta
-            response = model.generate_content(
-                f"تكلم باللهجة العمانية بصفتك أحمد AI: {prompt}",
-                request_options=RequestOptions(api_version='v1')
-            )
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # طلب الرد ببساطة بدون تعقيدات في الـ options
+            response = model.generate_content(f"تكلم باللهجة العمانية بصفتك أحمد AI: {prompt}")
+            
+            if response:
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        # إذا فشل Flash، بنجرب Pro كخيار أخير وبنفس الطريقة
-        try:
-            model_pro = genai.GenerativeModel('gemini-pro')
-            response = model_pro.generate_content(
-                f"تكلم باللهجة العمانية بصفتك أحمد AI: {prompt}",
-                request_options=RequestOptions(api_version='v1')
-            )
-            st.markdown(response.text)
-        except Exception as e2:
-            st.error(f"يا بوبدر، جوجل تقول: {e2}")
+        st.error(f"يا أحمد، صار خطأ في النظام: {e}")
+        st.info("تأكد إن مفتاح الـ API شغال وما منتهي صلاحيته من Google AI Studio.")
