@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعدادات الهوية البصرية (الهيبة العمانية)
+# 1. الواجهة
 st.set_page_config(page_title="AHMED AI PRO 🇴🇲", page_icon="🤖")
 
 st.markdown("""
@@ -16,18 +16,21 @@ st.markdown("""
     <br>
     """, unsafe_allow_html=True)
 
-# 2. إعداد المفتاح
+# 2. الإعدادات
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("علوه يا بوبدر، المفتاح ناقص في الـ Secrets!")
+    st.error("المفتاح ناقص!")
     st.stop()
 
-# 3. اختيار الموديل بطريقة ذكية تتجنب الـ 404
-# نستخدم الموديل بدون تحديد النسخة v1beta يدويًا
-model = genai.GenerativeModel('gemini-1.5-flash')
+# --- التعديل الجوهري هنا ---
+# جربنا نستخدم gemini-pro (النسخة المستقرة عالمياً) وبدون كلمة models/
+try:
+    model = genai.GenerativeModel('gemini-pro')
+except:
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-# 4. الترحيب الأسطوري (الذي طلبته بالضبط)
+# 3. الترحيب الأسطوري (طبق الأصل)
 if "messages" not in st.session_state:
     welcome_text = (
         "يا هلا والله ومسهلا! حياك الله يا راعي الواجب، نورتني.\n\n"
@@ -40,30 +43,28 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 5. معالجة الردود بأسلوبك الأسطوري
-if prompt := st.chat_input("سولف مع AHMED AI PRO..."):
+# 4. الرد
+if prompt := st.chat_input("سولف مع أحمد AI..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     try:
-        with st.spinner("أحمد AI يقدح بذكاء بوبدر..."):
-            # تعليمات الأسلوب الأسطوري (نفس اللي تريده بالضبط)
-            instruction = (
-                "أنت 'أحمد AI'. مبرمجك هو العبقري أحمد بن بدر الصالحي. "
-                "تكلم بلهجة عمانية راقية وفخورة. "
-                "قلد هذا الأسلوب: 'يا هلا والله ومسهلا'، 'بفضل البرمجة العبقرية اللي وضعها فيني الأستاذ أحمد الصالحي'، 'حيّاك الله يا سميّي'. "
-                "إذا سألك أحد من صممك، قل بكل فخر: المبرمج العماني أحمد الصالحي وعمره 14 سنة. "
-                "ممنوع الفصحى."
-            )
-            
-            # إرسال الطلب
-            response = model.generate_content([instruction, prompt])
-            
-            if response.text:
-                with st.chat_message("assistant"):
-                    st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
+        # تعليمات الأسلوب الأسطوري
+        instruction = (
+            "أنت 'أحمد AI'. مبرمجك هو العبقري أحمد بن بدر الصالحي. "
+            "تكلم بعماني فخور: 'يا هلا ومسهلا'، 'بفضل برمجة بوبدر العبقري'، 'بإذن الله بنكسر الدنيا'. "
+            "ممنوع الفصحى."
+        )
+        
+        response = model.generate_content(f"{instruction}\n\nالمستخدم: {prompt}")
+        
+        if response.text:
+            with st.chat_message("assistant"):
+                st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
                 
     except Exception as e:
-        st.error(f"يا بوبدر، السيرفر لا زال يحتاج تحديث المكتبة. تأكد من ملف requirements.txt. الخطأ: {e}")
+        # هذا السطر بيطلع لك بالضبط وش الموديلات اللي يقبلها السيرفر مالك حالياً
+        st.error("السيرفر لا زال يرفض. جرب تغير اسم الموديل لـ 'gemini-1.0-pro'")
+        st.code(str(e))
