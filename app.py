@@ -1,24 +1,24 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد الواجهة (نفس أول - بسيطة وجميلة)
+# 1. إعداد الواجهة
 st.set_page_config(page_title="Ahmed AI 🇴🇲", page_icon="🤖")
 st.title("🤖 Ahmed AI - العماني")
 st.caption("برمجة وتصميم: أحمد بن بدر الصالحي 🇴🇲")
 st.markdown("---")
 
-# 2. جلب المفتاح
+# 2. إعداد المفتاح
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("المفتاح غير موجود!")
+    st.error("المفتاح غير موجود في Secrets!")
     st.stop()
 
-# 3. اختيار الموديل المستقر (بدون أرقام إصدارات معقدة)
-# جربنا 'gemini-pro' لأنه يقبل الاتصال العادي (v1)
+# 3. اختيار الموديل (استخدمنا الاسم المباشر عشان نتفادى خطأ 404)
+# هذا الاسم يشتغل مع النسخة المستقرة v1
 model = genai.GenerativeModel('gemini-pro')
 
-# 4. ذاكرة الدردشة
+# 4. الذاكرة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -34,15 +34,12 @@ if prompt := st.chat_input("موه حالك؟"):
 
     try:
         with st.chat_message("assistant"):
-            # تعليمات واضحة
-            full_query = f"أنت ذكاء اصطناعي اسمك أحمد AI. تكلم باللهجة العمانية فقط. سؤال المستخدم: {prompt}"
-            
-            # الطلب البسيط
-            response = model.generate_content(full_query)
-            
-            if response.text:
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # طلب الرد بأبسط طريقة ممكنة
+            response = model.generate_content(f"تكلم بالعماني: {prompt}")
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        # إذا صار خطأ، بيخبرنا بالضبط شو نوعه
-        st.error(f"يا بوبدر، جوجل تقول: {e}")
+        # إذا استمر الخطأ، بنخلي البرنامج يخبرنا شو هي الموديلات المتاحة لحسابك بالضبط
+        st.error("أحمد، حسابك يحتاج موديل محدد. هذي هي الموديلات اللي تقدر تستخدمها:")
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        st.write(available_models)
