@@ -57,4 +57,25 @@ def ask_ahmed(text):
 
 # 6. عرض الشات
 for message in st.session_state.chat_history:
-    # تحويل اسم الدور من model إلى assistant ل
+    # تحويل اسم الدور من model إلى assistant ليتوافق مع أيقونات Streamlit
+    role = "assistant" if message["role"] == "model" else "user"
+    with st.chat_message(role):
+        st.write(message["parts"][0]["text"])
+
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث مع أحمد AI..."):
+    # عرض كلام المستخدم
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    # جلب رد الذكاء الاصطناعي
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    # عرض رد البوت
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    # حفظ في الذاكرة (استخدام 'model' لتوافق API جوجل)
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
