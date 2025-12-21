@@ -1,24 +1,24 @@
 import streamlit as st
-import requests
-import json
+import google.generativeai as genai
 
-# 1. إعدادات المتصفح
+# 1. إعدادات الصفحة
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. جلب المفاتيح من الـ Secrets
+# 2. جلب وتجهيز المفاتيح (مع تنظيف المسافات)
 try:
+    # جلب المفاتيح وتأكد أنها بدون مسافات مخفية
     ALL_KEYS = [
-        st.secrets["KEY1"],
-        st.secrets["KEY2"],
-        st.secrets["KEY3"],
-        st.secrets["KEY4"],
-        st.secrets["KEY5"]
+        st.secrets["KEY1"].strip(),
+        st.secrets["KEY2"].strip(),
+        st.secrets["KEY3"].strip(),
+        st.secrets["KEY4"].strip(),
+        st.secrets["KEY5"].strip()
     ]
-except:
-    st.error("تأكد من إضافة KEY1 إلى KEY5 في الـ Secrets يا بوبدر!")
+except Exception as e:
+    st.error("يا بوبدر، تأكد من كتابة KEY1 إلى KEY5 في الـ Secrets بشكل صحيح!")
     st.stop()
 
-# 3. تصميم الواجهة الزرقاء (لمسة أحمد الصالحي)
+# 3. تصميم واجهة "أحمد الصالحي" الرهيبة
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -27,6 +27,7 @@ st.markdown("""
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
         <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
+        <div style="font-size: 0.8em; opacity: 0.8;">تم تفعيل النظام الخماسي بنجاح</div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -35,53 +36,46 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع جوجل
-def ask_ahmed(text):
-    system_instruction = (
+# 5. دالة الاتصال الذكية
+def ask_ahmed(user_text):
+    instruction = (
         "أنت 'أحمد AI'. أجب بلهجة عمانية قحة وذكاء شديد. "
-        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي. "
-        "افتخر بمبرمجك في ردودك."
+        "تذكر دائماً أن من صممك وبرمجك هو العبقري أحمد بن بدر الصالحي. "
+        "افتخر بمبرمجك في كل رد."
     )
     
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
-    
-    for i, key in enumerate(ALL_KEYS):
-        # الرابط الرسمي المعتمد
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
-        
-        payload = {
-            "contents": current_history,
-            "system_instruction": {"parts": [{"text": system_instruction}]}
-        }
-        
+    # محاولة الاتصال بكل مفتاح حتى ينجح واحد
+    for key in ALL_KEYS:
         try:
-            response = requests.post(url, json=payload, timeout=15)
-            if response.status_code == 200:
-                result = response.json()
-                return result['candidates'][0]['content']['parts'][0]['text']
-            else:
-                continue 
-        except:
-            continue
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=instruction
+            )
             
-    return "يا بوبدر، لسه فيه مشكلة في الاتصال أو المفاتيح. تأكد من الـ API Keys."
+            # إرسال الرسالة
+            response = model.generate_content(user_text)
+            if response.text:
+                return response.text
+        except:
+            continue # إذا فشل مفتاح، ننتقل للي بعده فوراً
+            
+    return "السموحة يا بوبدر، يبدو إن فيه مشكلة في تفعيل المفاتيح من طرف جوجل. حاول مرة ثانية بعد شوي."
 
-# 6. عرض الشات
+# 6. عرض المحادثة
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
-        st.write(message["parts"][0]["text"])
+        st.markdown(message["content"])
 
-# 7. خانة الكتابة (هنا كان الخطأ وتم إصلاحه)
-if prompt := st.chat_input("تحدث مع أحمد AI..."):
+# 7. مدخلات المستخدم
+if prompt := st.chat_input("موه علومك؟ اسألني أي شيء..."):
+    st.session_state.chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.write(prompt)
+        st.markdown(prompt)
     
     with st.chat_message("assistant"):
         with st.spinner("أحمد AI يفكر..."):
-            res = ask_ahmed(prompt)
-            st.write(res)
-    
-    # حفظ في الذاكرة
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+            answer = ask_ahmed(prompt)
+            st.markdown(answer)
+            st.session_state.chat_history.append({"role": "model", "content": answer})
