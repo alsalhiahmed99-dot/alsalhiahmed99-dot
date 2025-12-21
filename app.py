@@ -35,7 +35,7 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع جوجل (إصلاح رابط الـ 404)
+# 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
     system_instruction = (
         "أنت 'أحمد AI'. أجب بلهجة عمانية قحة وذكاء شديد. "
@@ -46,7 +46,7 @@ def ask_ahmed(text):
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
     for i, key in enumerate(ALL_KEYS):
-        # الرابط الصحيح اللي ما يخطئ أبداً بإذن الله:
+        # الرابط الرسمي المعتمد
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
         
         payload = {
@@ -60,14 +60,11 @@ def ask_ahmed(text):
                 result = response.json()
                 return result['candidates'][0]['content']['parts'][0]['text']
             else:
-                # إذا طلع خطأ غير الـ 200، خبرنا وش هو بالضبط
-                error_info = response.json().get('error', {}).get('message', 'Unknown Error')
-                print(f"Key {i+1} failed: {response.status_code} - {error_info}")
                 continue 
-        except Exception as e:
+        except:
             continue
             
-    return "يا بوبدر، لسه جوجل تقول 404! تأكد إن المفاتيح اللي في الـ Secrets نوعها 'Gemini API' ومطلعة من AI Studio."
+    return "يا بوبدر، لسه فيه مشكلة في الاتصال أو المفاتيح. تأكد من الـ API Keys."
 
 # 6. عرض الشات
 for message in st.session_state.chat_history:
@@ -75,11 +72,16 @@ for message in st.session_state.chat_history:
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة
+# 7. خانة الكتابة (هنا كان الخطأ وتم إصلاحه)
 if prompt := st.chat_input("تحدث مع أحمد AI..."):
     with st.chat_message("user"):
         st.write(prompt)
     
     with st.chat_message("assistant"):
         with st.spinner("أحمد AI يفكر..."):
-            res = ask_ahmed(
+            res = ask_ahmed(prompt)
+            st.write(res)
+    
+    # حفظ في الذاكرة
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
