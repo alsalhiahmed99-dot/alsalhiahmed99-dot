@@ -48,7 +48,7 @@ def ask_ahmed(user_text):
     for key in ALL_KEYS:
         try:
             genai.configure(api_key=key)
-            model = genai.GenerativeModel(
+          model_name="gemini-1.5-pro"  # جرب البرو بدل الفلاش
                 model_name="gemini-1.5-flash",
                 system_instruction=instruction
             )
