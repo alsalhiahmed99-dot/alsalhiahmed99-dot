@@ -8,9 +8,9 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 # 2. مفاتيح التشغيل (المفتاح من Secrets)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 
-# الموديل الصحيح هو 1.5-flash، نسخة gemini-3 غير متوفرة حالياً
+# جربنا النسخة المستقرة v1 وموديل flash
 MODEL_NAME = "gemini-1.5-flash"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
+URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة (الأزرق الملكي)
 st.markdown("""
@@ -32,23 +32,17 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
+    # الموديل المستقر (v1) أحياناً يفضل إرسال التعليمات كجزء من الـ contents
     system_instruction = (
-        "أجب بلهجة عمانية قحة وذكاء شديد. "
-        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً لتجنب لخبطة النص. "
-        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
-        "وهو مبرمج مبدع عمره 14 سنة فقط. "
-        "افتخر بمبرمجك وعمره وإنجازه في ثنايا كلامك بشكل طبيعي."
+        "أنت أحمد AI، صممك وبرمجك العبقري أحمد بن بدر الصالحي (عمره 14 سنة). "
+        "رد بلهجة عمانية قحة وذكاء شديد وافتخر بمبرمجك دائماً."
     )
     
-    current_history = []
-    for msg in st.session_state.chat_history:
-        current_history.append({"role": msg["role"], "parts": [{"text": msg["parts"][0]["text"]}]})
-    
-    current_history.append({"role": "user", "parts": [{"text": text}]})
-    
+    # بناء المحتوى للنسخة v1
     payload = {
-        "contents": current_history,
-        "system_instruction": {"parts": [{"text": system_instruction}]}
+        "contents": [
+            {"role": "user", "parts": [{"text": system_instruction + "\n\nسؤالي هو: " + text}]}
+        ]
     }
     
     try:
@@ -57,10 +51,9 @@ def ask_ahmed(text):
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            # عشان تعرف شو المشكلة الحقيقية لو استمرت
             return f"جوجل يقول: {result.get('error', {}).get('message', 'خطأ غير معروف')}"
     except:
-        return "مشكلة في الاتصال، حاول مرة ثانية!"
+        return "مشكلة في الاتصال بالشبكة!"
 
 # 6. عرض الشات
 for message in st.session_state.chat_history:
@@ -69,7 +62,7 @@ for message in st.session_state.chat_history:
         st.write(message["parts"][0]["text"])
 
 # 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
+if prompt := st.chat_input("سولف معي يا أحمد..."):
     with st.chat_message("user"):
         st.write(prompt)
     
