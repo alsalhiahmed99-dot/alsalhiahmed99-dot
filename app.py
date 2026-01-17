@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import json
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖", layout="centered")
@@ -36,17 +35,8 @@ def generate_image(prompt):
 
 # 6. دالة التواصل مع الذكاء الاصطناعي
 def ask_ahmed(text):
-    system_instruction = "أنت أحمد AI، مبرمجك هو أحمد بن بدر الصالحي عمره 14 سنة. رد بلهجة عمانية قحة."
+    system_instruction = "أنت أحمد AI، مبرمجك هو العبقري أحمد بن بدر الصالحي عمره 14 سنة. رد بلهجة عمانية قحة."
     contents = []
     for msg in st.session_state.chat_history:
         contents.append({"role": msg["role"], "parts": [{"text": msg["parts"][0]["text"]}]})
-    contents.append({"role": "user", "parts": [{"text": text}]})
-    
-    payload = {
-        "contents": contents,
-        "system_instruction": {"parts": [{"text": system_instruction}]}
-    }
-    
-    try:
-        response = requests.post(URL, json=payload, timeout=15)
-        if
+    contents.append({"role": "user", "
