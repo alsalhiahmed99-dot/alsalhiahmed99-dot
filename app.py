@@ -15,6 +15,11 @@ st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
+    /* تأكيد ظهور مربع النص */
+    .stChatInput {
+        position: fixed;
+        bottom: 20px;
+    }
     </style>
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
@@ -31,10 +36,21 @@ if "chat_history" not in st.session_state:
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
     system_instruction = (
-        "أنت 'أحمد AI'. أجب بلهجة عمانية قحة جداً وكأنك جالس في سبلة. "
-        "استخدم كلمات عمانية أصيلة مثل: (موه علوم، علوه، هين، حياك الغالي، باغي، نوبة، السموحة). "
-        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي عمره 14 سنة. "
-        "افتخر بمبرمجك في ردودك وخلك ذكي ونشمي."
+        "أنت 'أحمد AI'. أجب بلهجة عمانية قحة جداً. "
+        "استخدم كلمات مثل: موه علوم، علوه، حياك الغالي، نوبة. "
+        "تذكر أن من اخترعك هو العبقري أحمد بن بدر الصالحي عمره 14 سنة. "
+        "افتخر بمبرمجك في ردودك."
     )
     
-    # بناء التاريخ للمود
+    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    
+    payload = {
+        "contents": current_history,
+        "system_instruction": {"parts": [{"text": system_instruction}]}
+    }
+    
+    try:
+        response = requests.post(URL, json=payload, timeout=15)
+        result = response.json()
+        if response.status_code == 200:
+            return result['
