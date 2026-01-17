@@ -2,20 +2,20 @@ import streamlit as st
 import requests
 import json
 
-# 1. إعدادات المتصفح (عشان يظهر اسمك في جوجل)
+# 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (جعل المفتاح سرياً)
-# تأكد من إضافة المفتاح في Streamlit Secrets باسم GOOGLE_API_KEY
+# 2. مفاتيح التشغيل (من Streamlit Secrets)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة (الألوان الزرقاء اللي طلبتها)
+# 3. تصميم الواجهة
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
+    div[data-testid="stChatMessageContent"] { direction: rtl; text-align: right; }
     </style>
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
@@ -31,16 +31,15 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
-    # تعليمات النظام: حذفت "أنت أحمد AI" من البداية لتجنب تشتت النص
+    # تعليمات النظام: جعلناه رزيناً وغير مبالغ في المدح
     system_instruction = (
-        "أجب بلهجة عمانية قحة وذكاء شديد. "
-        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً لتجنب لخبطة النص. "
-        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
-        "وهو مبرمج مبدع عمره 14 سنة فقط. "
-        "افتخر بمبرمجك وعمره وإنجازه في ثنايا كلامك بشكل طبيعي."
+        "أنت ذكاء اصطناعي بلهجة عمانية قحة ورزينة. "
+        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً. "
+        "لا تبالغ في مدح مبرمجك في كل رد؛ خلك طبيعي ونشمي وركز على جواب المستخدم. "
+        "فقط إذا سألك أحد عن هويتك أو من صممك، أخبره بفخر واختصار أنك من تصميم وبرمجة العبقري أحمد بن بدر الصالحي وعمره 14 سنة. "
+        "استخدم كلمات مثل (حي الله، نشمي، السموحة، علومك) باعتدال وبدون تكرار ممل."
     )
     
-    # بناء التاريخ للموديل
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
     payload = {
@@ -52,33 +51,3 @@ def ask_ahmed(text):
         response = requests.post(URL, json=payload, timeout=15)
         result = response.json()
         if response.status_code == 200:
-            return result['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
-    except:
-        return "مشكلة في الاتصال، حاول مرة ثانية!"
-
-# 6. عرض الشات
-for message in st.session_state.chat_history:
-    # تحويل اسم الدور من model إلى assistant ليتوافق مع أيقونات Streamlit
-    role = "assistant" if message["role"] == "model" else "user"
-    with st.chat_message(role):
-        st.write(message["parts"][0]["text"])
-
-# 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
-    # عرض كلام المستخدم
-    with st.chat_message("user"):
-        st.write(prompt)
-    
-    # جلب رد الذكاء الاصطناعي
-    with st.spinner("أحمد AI يفكر..."):
-        res = ask_ahmed(prompt)
-    
-    # عرض رد البوت
-    with st.chat_message("assistant"):
-        st.write(res)
-    
-    # حفظ في الذاكرة (استخدام 'model' لتوافق API جوجل)
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
