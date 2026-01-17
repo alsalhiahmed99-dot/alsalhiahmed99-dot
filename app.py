@@ -9,7 +9,6 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
-
 # 3. تصميم الواجهة (الألوان الزرقاء)
 st.markdown("""
     <style>
