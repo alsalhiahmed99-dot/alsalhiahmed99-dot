@@ -5,7 +5,7 @@ import json
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (جعل المفتاح سرياً)
+# 2. مفاتيح التشغيل (تأكد من وجود المفتاح في Secrets)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
@@ -32,10 +32,9 @@ if "chat_history" not in st.session_state:
 def ask_ahmed(text):
     system_instruction = (
         "أجب بلهجة عمانية قحة وذكاء شديد. "
-        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً لتجنب لخبطة النص. "
-        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
-        "وهو مبرمج مبدع عمره 14 سنة فقط. "
-        "افتخر بمبرمجك وعمره وإنجازه في ثنايا كلامك بشكل طبيعي."
+        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً. "
+        "تذكر دائماً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
+        "وهو مبرمج مبدع عمره 14 سنة فقط. افتخر به دائماً."
     )
     
     current_history = []
@@ -66,11 +65,21 @@ for message in st.session_state.chat_history:
         st.write(message["parts"][0]["text"])
 
 # 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
+prompt = st.chat_input("تحدث معي...")
+
+if prompt:
+    # عرض كلام المستخدم
     with st.chat_message("user"):
         st.write(prompt)
     
+    # جلب رد الذكاء الاصطناعي
     with st.spinner("أحمد AI يفكر..."):
         res = ask_ahmed(prompt)
     
-    with st.
+    # عرض رد البوت
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    # حفظ في الذاكرة
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
