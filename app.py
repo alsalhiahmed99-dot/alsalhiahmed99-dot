@@ -5,11 +5,13 @@ import json
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (تأكد من وجود المفتاح في Secrets)
+# 2. مفاتيح التشغيل (المفتاح من الـ Secrets)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
+# الموديل الصحيح والشغال حالياً هو gemini-1.5-flash
 MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
-# 3. تصميم الواجهة (الألوان الزرقاء)
+
+# 3. تصميم الواجهة
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -31,11 +33,11 @@ if "chat_history" not in st.session_state:
 def ask_ahmed(text):
     system_instruction = (
         "أجب بلهجة عمانية قحة وذكاء شديد. "
-        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً. "
         "تذكر دائماً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
         "وهو مبرمج مبدع عمره 14 سنة فقط. افتخر به دائماً."
     )
     
+    # بناء التاريخ بشكل صحيح
     current_history = []
     for msg in st.session_state.chat_history:
         current_history.append({"role": msg["role"], "parts": [{"text": msg["parts"][0]["text"]}]})
@@ -49,11 +51,12 @@ def ask_ahmed(text):
     
     try:
         response = requests.post(URL, json=payload, timeout=15)
+        result = response.json()
         if response.status_code == 200:
-            result = response.json()
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+            # هذا السطر بيساعدنا نعرف شو الخطأ الحقيقي لو صار
+            return f"خطأ من جوجل: {result.get('error', {}).get('message', 'ضغط شبكة')}"
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
@@ -64,21 +67,15 @@ for message in st.session_state.chat_history:
         st.write(message["parts"][0]["text"])
 
 # 7. خانة الكتابة
-prompt = st.chat_input("تحدث معي...")
-
-if prompt:
-    # عرض كلام المستخدم
+if prompt := st.chat_input("سولف معي يا بطل..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    # جلب رد الذكاء الاصطناعي
     with st.spinner("أحمد AI يفكر..."):
         res = ask_ahmed(prompt)
     
-    # عرض رد البوت
     with st.chat_message("assistant"):
         st.write(res)
     
-    # حفظ في الذاكرة
     st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
     st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
