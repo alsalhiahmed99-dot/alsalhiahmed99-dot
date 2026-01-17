@@ -30,7 +30,6 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
-    # التعديل هنا فقط: حذف ظهور الاسم في بداية الردود
     system_instruction = (
         "أجب بلهجة عمانية قحة وذكاء شديد. "
         "ممنوع تضع اسمك في بداية الرد (مثل أحمد AI: ...)؛ ابدأ كلامك مباشرة. "
@@ -38,5 +37,20 @@ def ask_ahmed(text):
         "افتخر بمبرمجك (عمره 14 سنة) في ثنايا ردودك بشكل طبيعي."
     )
     
-    # بناء التاريخ للموديل
-    current_history = st.session_state.chat_history + [{"role": "user", "
+    # تصحيح السطر 42 اللي كان فيه الخطأ
+    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    
+    payload = {
+        "contents": current_history,
+        "system_instruction": {"parts": [{"text": system_instruction}]}
+    }
+    
+    try:
+        response = requests.post(URL, json=payload, timeout=15)
+        result = response.json()
+        if response.status_code == 200:
+            return result['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+    except:
+        return "مشكلة في الاتصال، حاول مرة ثانية!"
