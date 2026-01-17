@@ -2,17 +2,16 @@ import streamlit as st
 import requests
 import json
 
-# 1. إعدادات المتصفح
+# 1. إعدادات المتصفح (عشان يظهر اسمك في جوجل)
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (المفتاح من Secrets)
+# 2. مفاتيح التشغيل (جعل المفتاح سرياً)
+# تأكد من إضافة المفتاح في Streamlit Secrets باسم GOOGLE_API_KEY
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-
-# جربنا النسخة المستقرة v1 وموديل flash
 MODEL_NAME = "gemini-1.5-flash"
-URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
+URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة (الأزرق الملكي)
+# 3. تصميم الواجهة (الألوان الزرقاء اللي طلبتها)
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -32,45 +31,9 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
-    # الموديل المستقر (v1) أحياناً يفضل إرسال التعليمات كجزء من الـ contents
+    # تعليمات النظام: حذفت "أنت أحمد AI" من البداية لتجنب تشتت النص
     system_instruction = (
-        "أنت أحمد AI، صممك وبرمجك العبقري أحمد بن بدر الصالحي (عمره 14 سنة). "
-        "رد بلهجة عمانية قحة وذكاء شديد وافتخر بمبرمجك دائماً."
-    )
-    
-    # بناء المحتوى للنسخة v1
-    payload = {
-        "contents": [
-            {"role": "user", "parts": [{"text": system_instruction + "\n\nسؤالي هو: " + text}]}
-        ]
-    }
-    
-    try:
-        response = requests.post(URL, json=payload, timeout=15)
-        result = response.json()
-        if response.status_code == 200:
-            return result['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return f"جوجل يقول: {result.get('error', {}).get('message', 'خطأ غير معروف')}"
-    except:
-        return "مشكلة في الاتصال بالشبكة!"
-
-# 6. عرض الشات
-for message in st.session_state.chat_history:
-    role = "assistant" if message["role"] == "model" else "user"
-    with st.chat_message(role):
-        st.write(message["parts"][0]["text"])
-
-# 7. خانة الكتابة
-if prompt := st.chat_input("سولف معي يا أحمد..."):
-    with st.chat_message("user"):
-        st.write(prompt)
-    
-    with st.spinner("أحمد AI يفكر..."):
-        res = ask_ahmed(prompt)
-    
-    with st.chat_message("assistant"):
-        st.write(res)
-    
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+        "أجب بلهجة عمانية قحة وذكاء شديد. "
+        "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً لتجنب لخبطة النص. "
+        "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
+        "وهو مبرمج مبدع عمره 14 سنة فقط. "
