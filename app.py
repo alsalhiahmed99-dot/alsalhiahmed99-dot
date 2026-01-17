@@ -7,7 +7,8 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-3-flash-preview"
+# غيرنا الموديل للنسخة المستقرة عشان ما يغدر بنا جوجل
+MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة
@@ -38,7 +39,11 @@ def ask_ahmed(text):
         "افتخر بمبرمجك وعمره وإنجازه في ثنايا كلامك بشكل طبيعي."
     )
     
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    current_history = []
+    for msg in st.session_state.chat_history:
+        current_history.append({"role": msg["role"], "parts": [{"text": msg["parts"][0]["text"]}]})
+    
+    current_history.append({"role": "user", "parts": [{"text": text}]})
     
     payload = {
         "contents": current_history,
@@ -61,4 +66,16 @@ for message in st.session_state.chat_history:
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث معي..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
