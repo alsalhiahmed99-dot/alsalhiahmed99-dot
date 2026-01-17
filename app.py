@@ -8,7 +8,7 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 # 2. مفاتيح التشغيل (جعل المفتاح سرياً)
 # تأكد من إضافة المفتاح في Streamlit Secrets باسم GOOGLE_API_KEY
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة (الألوان الزرقاء اللي طلبتها)
@@ -37,3 +37,23 @@ def ask_ahmed(text):
         "لا تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً لتجنب لخبطة النص. "
         "تذكر دائماً وأبداً أن من اخترعك وصممك وبرمجك هو العبقري أحمد بن بدر الصالحي، "
         "وهو مبرمج مبدع عمره 14 سنة فقط. "
+        "افتخر بمبرمجك وعمره وإنجازه في ثنايا كلامك بشكل طبيعي."
+    )
+    
+    # بناء التاريخ للموديل
+    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    
+    payload = {
+        "contents": current_history,
+        "system_instruction": {"parts": [{"text": system_instruction}]}
+    }
+    
+    try:
+        response = requests.post(URL, json=payload, timeout=15)
+        result = response.json()
+        if response.status_code == 200:
+            return result['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+    except:
+        return "مشكلة في الاتصال، حاول مرة ثانية!"
