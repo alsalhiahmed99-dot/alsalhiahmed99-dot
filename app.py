@@ -28,7 +28,7 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع جوجل (مع ميزة معرفة اليوتيوبرات)
+# 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
     
@@ -40,7 +40,7 @@ def ask_ahmed(text):
     system_instruction = (
         f"أنت ذكاء اصطناعي محترف. {extra_instruction} "
         "تحدث باللغة التي يكلمك بها المستخدم. إذا كانت بالعربي فاستخدم اللهجة العمانية الرزينة. "
-        "إذا سألك المستخدم عن يوتيوبر أو شخصية مشهورة ولا تعرفها، استخدم أداة البحث المدمجة لتجيب بدقة. "
+        "استخدم أداة البحث المدمجة لتجيب بدقة عن اليوتيوبرات والأخبار الجديدة. "
         "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI)."
     )
     
@@ -49,7 +49,6 @@ def ask_ahmed(text):
     payload = {
         "contents": current_history,
         "system_instruction": {"parts": [{"text": system_instruction}]},
-        # هذه الإضافة تخليه يبحث في جوجل عن اليوتيوبرات والأخبار الجديدة
         "tools": [{"google_search_retrieval": {}}] 
     }
     
@@ -59,7 +58,7 @@ def ask_ahmed(text):
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط!"
+            return "السموحة يا بوبدر، فيه ضغط بسيط على السيرفر، حاول مرة ثانية!"
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
@@ -71,10 +70,18 @@ for message in st.session_state.chat_history:
 
 # 7. خانة الكتابة
 if prompt := st.chat_input("تحدث معي..."):
+    # عرض كلام المستخدم
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("أحمد AI يبحث عن المعلومة..."):
+    # جلب رد الذكاء الاصطناعي
+    with st.spinner("أحمد AI يبحث ويفكر..."):
         res = ask_ahmed(prompt)
     
-    with st.chat_message
+    # عرض رد البوت
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    # حفظ في الذاكرة
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
