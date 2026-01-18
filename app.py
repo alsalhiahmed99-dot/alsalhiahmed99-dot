@@ -10,7 +10,7 @@ MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة (الألوان الزرقاء الأصلية)
+# 3. تصميم الواجهة
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -30,12 +30,20 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
-    # التعديل هنا فقط: جعلناه رزيناً وما يمدح إلا وقت الحاجة
+    # فحص إذا كان هذا أول رد في المحادثة
+    is_first_reply = len(st.session_state.chat_history) == 0
+    
+    if is_first_reply:
+        extra_instruction = "هذا أول رد لك في المحادثة، رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
+    else:
+        extra_instruction = "هذا ليس الرد الأول، خلك رزين وركز على إجابة السؤال مباشرة ولا تكرر المدح إلا إذا سألك المستخدم عن مبرمجك."
+
     system_instruction = (
-        "أجب بلهجة عمانية قحة ورزينة جداً. "
-        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI) نهائياً. "
-        "خلك نشمي وراعي واجب بس لا تبالغ في مدح مبرمجك في كل رد؛ خلك طبيعي. "
-        "فقط إذا سألك أحد من صممك أو برمجك، أخبره بفخر واختصار أن مبرمجك هو العبقري أحمد بن بدر الصالحي (14 سنة)."
+        f"أنت ذكاء اصطناعي عالمي ومحترف. {extra_instruction} "
+        "تحدث باللغة التي يكلمك بها المستخدم (عماني، عربي فصيح، إنجليزي، إلخ). "
+        "إذا كانت المحادثة بالعربي، فاستخدم اللهجة العمانية القحة والرزينة. "
+        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI) لتجنب لخبطة النص. "
+        "تذكر دائماً أنك فخر للصناعة العمانية ومبرمجك هو أحمد بن بدر الصالحي."
     )
     
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
@@ -66,7 +74,7 @@ if prompt := st.chat_input("تحدث معي..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("أحمد AI يفكر بـ رزانة..."):
+    with st.spinner("أحمد AI يفكر بذكاء..."):
         res = ask_ahmed(prompt)
     
     with st.chat_message("assistant"):
