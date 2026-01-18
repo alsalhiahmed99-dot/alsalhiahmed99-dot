@@ -5,12 +5,12 @@ import json
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (استخدمنا 1.5 لأنه أثبت واستقر)
+# 2. مفاتيح التشغيل (رجعنا للنسخة المستقرة جداً)
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة
+# 3. تصميم الواجهة (الألوان الزرقاء اللي تحبها)
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -32,44 +32,36 @@ if "chat_history" not in st.session_state:
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
     
+    # تعليمات ذكية: خليناه يعرف إنه لازم يكون ملم بكل اليوتيوبرز والمعلومات الحديثة
     if is_first_reply:
-        instruction = "رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
+        instruction = "رحب بالمستخدم بلهجة عمانية قحة واذكر بفخر أن مبرمجك هو العبقري أحمد بن بدر الصالحي (14 سنة)."
     else:
         instruction = "خلك رزين وركز على إجابة السؤال مباشرة ولا تكرر المدح إلا إذا سألك المستخدم عن مبرمجك."
 
     system_instruction = (
-        f"أنت ذكاء اصطناعي محترف. {instruction} "
-        "تحدث باللغة التي يكلمك بها المستخدم. إذا كانت بالعربي فاستخدم اللهجة العمانية الرزينة. "
-        "استخدم البحث في جوجل للإجابة عن اليوتيوبرات والأخبار الجديدة. "
+        f"أنت ذكاء اصطناعي واسع المعرفة. {instruction} "
+        "أجب باللغة التي يكلمك بها المستخدم، وإذا كانت بالعربي استخدم اللهجة العمانية الرزينة. "
+        "أنت تعرف كل شيء عن مشاهير اليوتيوب (مثل مستر بيست، عوف، وغيرهم) والمعلومات الحديثة. "
         "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI)."
     )
     
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
-    # هيكل الطلب الصحيح لميزة البحث
+    # الطلب الصافي (بدون Tools عشان ما يعلق)
     payload = {
         "contents": current_history,
-        "system_instruction": {"parts": [{"text": system_instruction}]},
-        "tools": [{"google_search_retrieval": {}}]
+        "system_instruction": {"parts": [{"text": system_instruction}]}
     }
     
     try:
-        response = requests.post(URL, json=payload, timeout=20)
+        response = requests.post(URL, json=payload, timeout=15)
         result = response.json()
-        
-        # إذا نجح الطلب
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            # لو ميزة البحث سوت مشكلة، بنجرب نرسل بدونه عشان ما يوقف البوت
-            payload_no_tools = {
-                "contents": current_history,
-                "system_instruction": {"parts": [{"text": system_instruction}]}
-            }
-            retry_res = requests.post(URL, json=payload_no_tools, timeout=15)
-            return retry_res.json()['candidates'][0]['content']['parts'][0]['text']
+            return "السموحة بوبدر، السيرفر فيه زحمة، جرب الحين مرة ثانية!"
     except:
-        return "السموحة بوبدر، الشبكة تعبانة شوية، حاول مرة ثانية!"
+        return "مشكلة في الاتصال، حاول مرة ثانية!"
 
 # 6. عرض الشات
 for message in st.session_state.chat_history:
@@ -82,7 +74,7 @@ if prompt := st.chat_input("تحدث معي..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("أحمد AI يبحث ويفكر..."):
+    with st.spinner("أحمد AI يفكر..."):
         res = ask_ahmed(prompt)
     
     with st.chat_message("assistant"):
