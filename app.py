@@ -28,29 +28,29 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع جوجل
+# 5. دالة التواصل مع جوجل (مع ميزة معرفة اليوتيوبرات)
 def ask_ahmed(text):
-    # فحص إذا كان هذا أول رد في المحادثة
     is_first_reply = len(st.session_state.chat_history) == 0
     
     if is_first_reply:
-        extra_instruction = "هذا أول رد لك في المحادثة، رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
+        extra_instruction = "رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
     else:
-        extra_instruction = "هذا ليس الرد الأول، خلك رزين وركز على إجابة السؤال مباشرة ولا تكرر المدح إلا إذا سألك المستخدم عن مبرمجك."
+        extra_instruction = "خلك رزين وركز على إجابة السؤال مباشرة ولا تكرر المدح إلا إذا سألك المستخدم عن مبرمجك."
 
     system_instruction = (
-        f"أنت ذكاء اصطناعي عالمي ومحترف. {extra_instruction} "
-        "تحدث باللغة التي يكلمك بها المستخدم (عماني، عربي فصيح، إنجليزي، إلخ). "
-        "إذا كانت المحادثة بالعربي، فاستخدم اللهجة العمانية القحة والرزينة. "
-        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI) لتجنب لخبطة النص. "
-        "تذكر دائماً أنك فخر للصناعة العمانية ومبرمجك هو أحمد بن بدر الصالحي."
+        f"أنت ذكاء اصطناعي محترف. {extra_instruction} "
+        "تحدث باللغة التي يكلمك بها المستخدم. إذا كانت بالعربي فاستخدم اللهجة العمانية الرزينة. "
+        "إذا سألك المستخدم عن يوتيوبر أو شخصية مشهورة ولا تعرفها، استخدم أداة البحث المدمجة لتجيب بدقة. "
+        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI)."
     )
     
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
     payload = {
         "contents": current_history,
-        "system_instruction": {"parts": [{"text": system_instruction}]}
+        "system_instruction": {"parts": [{"text": system_instruction}]},
+        # هذه الإضافة تخليه يبحث في جوجل عن اليوتيوبرات والأخبار الجديدة
+        "tools": [{"google_search_retrieval": {}}] 
     }
     
     try:
@@ -59,7 +59,7 @@ def ask_ahmed(text):
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+            return "السموحة يا بوبدر، جوجل يقول فيه ضغط!"
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
@@ -74,11 +74,7 @@ if prompt := st.chat_input("تحدث معي..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("أحمد AI يفكر بذكاء..."):
+    with st.spinner("أحمد AI يبحث عن المعلومة..."):
         res = ask_ahmed(prompt)
     
-    with st.chat_message("assistant"):
-        st.write(res)
-    
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+    with st.chat_message
