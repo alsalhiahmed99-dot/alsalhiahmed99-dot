@@ -43,6 +43,38 @@ def ask_ahmed(text):
         "system_instruction": {"parts": [{"text": instruction}]}
     }
 
-    # نظام المحاولة لتجنب خطأ 429
+    # نظام المحاولة لتجنب خطأ 429 (تأكد من المسافات هنا)
     for attempt in range(3):
         try:
+            response = requests.post(URL, json=payload, timeout=15)
+            if response.status_code == 200:
+                return response.json()['candidates'][0]['content']['parts'][0]['text']
+            elif response.status_code == 429:
+                time.sleep(2)
+                continue
+            else:
+                return f"السموحة بوبدر، السيرفر تعبان (خطأ {response.status_code})"
+        except Exception as e:
+            time.sleep(1)
+            continue
+    return "السموحة، الشبكة مضغوطة جداً، جرب بعد ثواني."
+
+# 6. عرض الشات
+for message in st.session_state.chat_history:
+    role = "assistant" if message["role"] == "model" else "user"
+    with st.chat_message(role):
+        st.write(message["parts"][0]["text"])
+
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث معي..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
