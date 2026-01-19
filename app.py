@@ -7,8 +7,7 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-# غيرنا الاسم لـ 1.5 عشان يشتغل بمفتاحك الجديد فوراً
-MODEL_NAME = "gemini-1.5-flash" 
+MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة
@@ -31,6 +30,7 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
+    # فحص إذا كان هذا أول رد في المحادثة
     is_first_reply = len(st.session_state.chat_history) == 0
     
     if is_first_reply:
@@ -59,8 +59,7 @@ def ask_ahmed(text):
         if response.status_code == 200:
             return result['candidates'][0]['content']['parts'][0]['text']
         else:
-            # هنا بنعرف شو المشكلة الحقيقية لو ما اشتغل
-            return f"جوجل يقول: {result.get('error', {}).get('message', 'ضغط على الشبكة')}"
+            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
