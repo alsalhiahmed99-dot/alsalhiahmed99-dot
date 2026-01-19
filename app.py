@@ -78,17 +78,25 @@ if prompt := st.chat_input("تحدث معي أو اطلب مني أرسم لك (
                 
                 # ****** التعديل الجديد هنا *******
                 # بنستخدم st.markdown مع وسم <img> HTML مباشر
-                st.markdown(f'<img src="{image_link}" style="max-width:100%; height:auto; border-radius:10px;">', unsafe_allow_html=True)
-                # ********************************
+               if any(word in prompt for word in ["ارسم", "صورة", "image"]):
+        with st.chat_message("assistant"):
+            with st.spinner('أحمد AI جالس يرسم لك...'):
+                seed = random.randint(1, 99999)
+                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").strip()
+                image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=800&seed={seed}&nologo=true"
                 
-                st.write(f"[📥 اضغط هنا لتحميل الصورة بجودة عالية]({image_link})")
+                try:
+                    # الطريقة الاحترافية: تحميل الصورة وعرضها كبيانات
+                    img_data = requests.get(image_url).content
+                    st.image(img_data, caption=f"نتيجتك لـ: {clean_prompt}", use_container_width=True)
+                    
+                    # زر تحميل مباشر
+                    st.download_button(label="📥 تحميل الصورة", data=img_data, file_name="ahmed_ai_image.png", mime="image/png")
+                except:
+                    st.error("أفا! تعذر عرض الصورة، حاول مرة ثانية.")
                 
                 st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-                st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم توليد صورة لـ: {clean_prompt}"}]})
-    else:
-        with st.spinner("أحمد AI يفكر..."):
-            res = ask_ahmed(prompt)
-        with st.chat_message("assistant"):
-            st.write(res)
+                st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم رسم {clean_prompt}"}]})
+        
         st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
         st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
