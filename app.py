@@ -8,7 +8,7 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-3-flash-preview" # رجعنا الموديل السريع لعيونك
+MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة
@@ -62,10 +62,29 @@ for message in st.session_state.chat_history:
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة والذكاء الهجين (نص + صور)
+# 7. خانة الكتابة والذكاء الهجين
 if prompt := st.chat_input("تحدث معي أو اطلب مني أرسم لك (مثال: ارسم سيارة)..."):
     with st.chat_message("user"):
         st.write(prompt)
     
     # فحص إذا كان المستخدم يريد صورة
-    if "ارسم" in prompt or "صورة" in prompt or "image" in prompt.lower():
+    if any(word in prompt for word in ["ارسم", "صورة", "Image", "image"]):
+        with st.chat_message("assistant"):
+            with st.spinner('أحمد AI جالس يرسم لك الحين...'):
+                seed = random.randint(1, 99999)
+                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").replace("Image", "").replace("image", "").strip()
+                image_link = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true"
+                
+                st.write(f"تفضل يا بوبدر، هذي صورة لـ ({clean_prompt}):")
+                st.markdown(f"![الصورة]({image_link})")
+                st.write(f"[📥 رابط الصورة بجودة عالية]({image_link})")
+                
+                st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+                st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم توليد صورة لـ: {clean_prompt}"}]})
+    else:
+        with st.spinner("أحمد AI يفكر..."):
+            res = ask_ahmed(prompt)
+        with st.chat_message("assistant"):
+            st.write(res)
+        st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+        st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
