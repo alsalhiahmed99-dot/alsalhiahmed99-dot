@@ -82,3 +82,20 @@ if prompt := st.chat_input("تحدث معي..."):
     
     st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
     st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+# --- ميزة توليد الصور الجديدة ---
+st.divider() # يسوي خط فاصل عشان الترتيب
+st.subheader("🎨 محرك أحمد AI لتوليد الصور")
+
+# خانة إدخال وصف الصورة
+img_description = st.text_input("اكتب وصف الصورة بالانجليزي (مثلاً: Omani man in space):", key="img_input")
+
+if img_description:
+    with st.spinner('انتظر شوي، أحمد AI جالس يرسم لك...'):
+        # الرابط السحري اللي يولد الصورة
+        image_link = f"https://pollinations.ai/p/{img_description.replace(' ', '%20')}?width=1024&height=1024"
+        
+        # عرض الصورة
+        st.image(image_link, caption=f"نتيجتك لـ: {img_description}")
+        
+        # زر تحميل الصورة
+        st.write(f"[📥 اضغط هنا لحفظ الصورة عندك]({image_link})")
