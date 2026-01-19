@@ -6,12 +6,12 @@ import random
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (تأكد من وجود الكي في Secrets)
+# 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة
+# 3. تصميم الواجهة (هيبة عمانية)
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -40,24 +40,20 @@ def ask_ahmed(text):
             return res_data['candidates'][0]['content']['parts'][0]['text']
         else:
             error_info = res_data.get('error', {}).get('message', 'خطأ غير معروف')
-            return f"السموحة بوبدر، جوجل يقول: {error_info}"
+            return f"السموحة يا بوبدر، جوجل يقول: {error_info}"
     except Exception as e:
         return f"فشل في الاتصال: {str(e)}"
 
-# 6. عرض المحادثة السابقة
+# 6. عرض المحادثة
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. منطقة الإدخال
+# 7. منطقة الإدخال والذكاء الهجين
 if prompt := st.chat_input("اكتب شيئاً أو اطلب رسمة..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    # فحص إذا كان المستخدم يريد صورة
-    if any(word in prompt.lower() for word in ["ارسم", "صورة", "image", "draw"]):
-        with st.chat_message("assistant"):
-            with st.spinner('أحمد AI جاري الرسم...'):
-                seed = random.randint(1, 99999)
-                clean_p = prompt.replace("ارسم",
+    # فحص إذا كان الطلب صورة
+    p_low = prompt.
