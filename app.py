@@ -32,15 +32,11 @@ if "chat_history" not in st.session_state:
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
-    if is_first_reply:
-        extra_instruction = "هذا أول رد لك، رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة أحمد بن بدر الصالحي (14 سنة)."
-    else:
-        extra_instruction = "خلك رزين وركز على الإجابة مباشرة ولا تكرر المدح إلا إذا سُئلت."
-
+    extra_instruction = "رحب بالمستخدم بلهجة عمانية واذكر فخرك بمبرمجك أحمد." if is_first_reply else "أجب مباشرة بلهجة عمانية رزينة."
+    
     system_instruction = (
         f"أنت ذكاء اصطناعي محترف. {extra_instruction} "
-        "تحدث بلهجة عمانية قحة ورزينة إذا كانت المحادثة بالعربي. "
-        "مبرمجك هو أحمد بن بدر الصالحي وفخره."
+        "تحدث بلهجة عمانية قحة ورزينة. مبرمجك هو أحمد بن بدر الصالحي."
     )
     
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
@@ -51,52 +47,25 @@ def ask_ahmed(text):
     
     try:
         response = requests.post(URL, json=payload, timeout=15)
-        result = response.json()
-        return result['candidates'][0]['content']['parts'][0]['text']
+        return response.json()['candidates'][0]['content']['parts'][0]['text']
     except:
-        return "السموحة يا بوبدر، الشبكة تعبانة شوي، حاول مرة ثانية!"
+        return "السموحة يا بوبدر، جوجل متعايي شوي، حاول مرة!"
 
-# 6. عرض الشات
+# 6. عرض الشات القديم
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة والذكاء الهجين
-if prompt := st.chat_input("تحدث معي أو اطلب مني أرسم لك (مثال: ارسم سيارة)..."):
+# 7. خانة الكتابة (الذكاء المدمج)
+if prompt := st.chat_input("تحدث معي أو اطلب رسمة..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    if any(word in prompt for word in ["ارسم", "صورة", "Image", "image"]):
-        with st.chat_message("assistant"):
-            with st.spinner('أحمد AI جالس يرسم لك الحين...'):
-                seed = random.randint(1, 99999)
-                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").replace("Image", "").replace("image", "").strip()
-                image_link = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true"
-                
-                st.write(f"تفضل يا بوبدر، هذي صورة لـ ({clean_prompt}):")
-                
-                # ****** التعديل الجديد هنا *******
-                # بنستخدم st.markdown مع وسم <img> HTML مباشر
-               if any(word in prompt for word in ["ارسم", "صورة", "image"]):
+    # إذا كان الطلب "رسم صورة"
+    if any(word in prompt.lower() for word in ["ارسم", "صورة", "image", "draw"]):
         with st.chat_message("assistant"):
             with st.spinner('أحمد AI جالس يرسم لك...'):
                 seed = random.randint(1, 99999)
-                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").strip()
-                image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=800&seed={seed}&nologo=true"
-                
-                try:
-                    # الطريقة الاحترافية: تحميل الصورة وعرضها كبيانات
-                    img_data = requests.get(image_url).content
-                    st.image(img_data, caption=f"نتيجتك لـ: {clean_prompt}", use_container_width=True)
-                    
-                    # زر تحميل مباشر
-                    st.download_button(label="📥 تحميل الصورة", data=img_data, file_name="ahmed_ai_image.png", mime="image/png")
-                except:
-                    st.error("أفا! تعذر عرض الصورة، حاول مرة ثانية.")
-                
-                st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-                st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم رسم {clean_prompt}"}]})
-        
-        st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-        st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").replace("image", "").strip()
+                image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true
