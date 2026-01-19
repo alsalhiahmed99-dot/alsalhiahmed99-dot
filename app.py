@@ -67,7 +67,6 @@ if prompt := st.chat_input("تحدث معي أو اطلب مني أرسم لك (
     with st.chat_message("user"):
         st.write(prompt)
     
-    # فحص إذا كان المستخدم يريد صورة
     if any(word in prompt for word in ["ارسم", "صورة", "Image", "image"]):
         with st.chat_message("assistant"):
             with st.spinner('أحمد AI جالس يرسم لك الحين...'):
@@ -76,8 +75,13 @@ if prompt := st.chat_input("تحدث معي أو اطلب مني أرسم لك (
                 image_link = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true"
                 
                 st.write(f"تفضل يا بوبدر، هذي صورة لـ ({clean_prompt}):")
-                st.markdown(f"![الصورة]({image_link})")
-                st.write(f"[📥 رابط الصورة بجودة عالية]({image_link})")
+                
+                # ****** التعديل الجديد هنا *******
+                # بنستخدم st.markdown مع وسم <img> HTML مباشر
+                st.markdown(f'<img src="{image_link}" style="max-width:100%; height:auto; border-radius:10px;">', unsafe_allow_html=True)
+                # ********************************
+                
+                st.write(f"[📥 اضغط هنا لتحميل الصورة بجودة عالية]({image_link})")
                 
                 st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
                 st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم توليد صورة لـ: {clean_prompt}"}]})
