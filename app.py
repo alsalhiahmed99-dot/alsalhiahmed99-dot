@@ -82,7 +82,8 @@ if prompt := st.chat_input("تحدث معي..."):
     
     st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
     st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
-if img_description:
+
+    if img_description:
     with st.spinner('أحمد AI جالس يرسم...'):
         # أضفنا رقم عشوائي (Seed) عشان نضمن إن الصورة تتحمل صح
         import random
