@@ -62,10 +62,35 @@ if prompt := st.chat_input("تحدث معي أو اطلب رسمة..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    # إذا كان الطلب "رسم صورة"
-    if any(word in prompt.lower() for word in ["ارسم", "صورة", "image", "draw"]):
+    # تحويل النص لـ lowercase للفحص
+    p_low = prompt.lower()
+    if any(word in p_low for word in ["ارسم", "صورة", "image", "draw"]):
         with st.chat_message("assistant"):
             with st.spinner('أحمد AI جالس يرسم لك...'):
                 seed = random.randint(1, 99999)
-                clean_prompt = prompt.replace("ارسم", "").replace("صورة", "").replace("image", "").strip()
-                image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true
+                # تنظيف الكلمات المفتاحية للحصول على الوصف فقط
+                clean_p = prompt.replace("ارسم", "").replace("صورة", "").replace("image", "").replace("Image", "").strip()
+                # السطر اللي كان فيه الخطأ (تم إصلاحه بإضافة علامة التنصيص في النهاية)
+                image_url = f"https://pollinations.ai/p/{clean_p.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true"
+                
+                try:
+                    # تحميل الصورة وعرضها كبيانات لضمان عدم الخروج من التطبيق
+                    img_res = requests.get(image_url, timeout=20)
+                    if img_res.status_code == 200:
+                        st.image(img_res.content, caption=f"إبداع أحمد AI لـ: {clean_p}", use_container_width=True)
+                        st.download_button(label="📥 تحميل الصورة", data=img_res.content, file_name="ahmed_ai_art.png", mime="image/png")
+                    else:
+                        st.error("الموقع مشغول شوي، جرب بعد ثواني.")
+                except:
+                    st.error("أفا! الرسام تعبان اليوم، حاول مرة ثانية.")
+                
+                st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+                st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم رسم: {clean_p}"}]})
+    
+    else:
+        with st.spinner("أحمد AI يفكر..."):
+            res = ask_ahmed(prompt)
+        with st.chat_message("assistant"):
+            st.write(res)
+        st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+        st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
