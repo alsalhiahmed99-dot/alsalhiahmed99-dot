@@ -8,7 +8,7 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-1.5-flash" # هذا الموديل أضمن للعمل بدون رسائل خطأ
+MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # 3. تصميم الواجهة
@@ -59,29 +59,38 @@ for message in st.session_state.chat_history:
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة
+# 7. خانة الكتابة والذكاء الهجين
 if prompt := st.chat_input("تحدث معي أو اطلب رسمة..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    # فحص طلب الصور
-    if any(word in prompt.lower() for word in ["ارسم", "صورة", "image"]):
+    # فحص إذا كان المستخدم يريد صورة
+    if any(word in prompt.lower() for word in ["ارسم", "صورة", "image", "draw"]):
         with st.chat_message("assistant"):
             with st.spinner('أحمد AI يرسم...'):
                 seed = random.randint(1, 99999)
-                clean_p = prompt.replace("ارسم", "").replace("صورة", "").strip()
-                # الرابط الصحيح
+                clean_p = prompt.replace("ارسم", "").replace("صورة", "").replace("image", "").replace("draw", "").strip()
                 img_url = f"https://pollinations.ai/p/{clean_p.replace(' ', '%20')}?width=1024&height=1024&seed={seed}&nologo=true"
                 
                 try:
                     img_res = requests.get(img_url, timeout=20)
                     if img_res.status_code == 200:
                         st.image(img_res.content, caption=f"بواسطة أحمد AI: {clean_p}")
-                        st.download_button("📥 تحميل الصورة", img_res.content, "art.png", "image/png")
+                        st.download_button("📥 تحميل الصورة", img_res.content, f"{clean_p}.png", "image/png")
+                        
+                        # حفظ في الذاكرة (هنا كان الخطأ وتم إصلاحه)
+                        st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+                        st.session_state.chat_history.append({"role": "model", "parts": [{"text": f"تم رسم {clean_p}"}]})
                     else:
                         st.error("السيرفر مشغول، جرب مرة ثانية.")
                 except:
                     st.error("فشل في جلب الصورة.")
-        
-        # حفظ في الذاكرة
-        st.session_state.chat_history.append({"role": "
+    
+    else:
+        # رد نصي عادي
+        with st.spinner("أحمد AI يفكر..."):
+            res = ask_ahmed(prompt)
+            with st.chat_message("assistant"):
+                st.write(res)
+            st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+            st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
