@@ -11,7 +11,7 @@ except Exception as e:
     st.error("السموحة بوبدر، مفتاح GROQ_API_KEY ما حصلته في السيكريت!")
     st.stop()
 
-# 3. تصميم الواجهة الاحترافي (نفس ستايلك)
+# 3. تصميم الواجهة الاحترافي
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
@@ -29,15 +29,57 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع الذكاء الاصطناعي (تم تحسينها لمنع التخريف)
+# 5. دالة التواصل مع الذكاء الاصطناعي
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
     
     if is_first_reply:
-        extra_instruction = "في أول رد، سلم بلهجة عمانية هادئة ووقورة، واذكر إنك من برمجة أحمد الصالحي باختصار."
+        extra_info = "في أول رد، سلم بلهجة عمانية هادئة واذكر إنك من برمجة أحمد الصالحي باختصار."
     else:
-        extra_instruction = "جاوب على قد السؤال بأسلوب رزين ومحترم."
+        extra_info = "جاوب على قد السؤال بأسلوب رزين ومحترم."
 
-    # تعليمات صارمة لضبط الأسلوب ومنع الردود الغريبة
+    # تأكدت هنا أن النص مغلق تماماً ولا يوجد كسر في الأسطر
     system_instruction = (
-        f"أنت ذكاء اصطنا
+        f"أنت ذكاء اصطناعي رزين وعماني أصلي، مبرمجك هو أحمد الصالحي. {extra_info} "
+        "تحدث بلهجة عمانية بيضاء، رصينة ومفهومة. "
+        "ممنوع الردود العشوائية أو الكلمات الإنجليزية المعربة. "
+        "خلك واثق، رزين، وكلامك منسق مثل كلام المجالس العمانية."
+    )
+    
+    messages = [{"role": "system", "content": system_instruction}]
+    for msg in st.session_state.chat_history:
+        role = "assistant" if msg["role"] == "model" else "user"
+        messages.append({"role": role, "content": msg["parts"][0]["text"]})
+    
+    messages.append({"role": "user", "content": text})
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=300
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"السموحة بوبدر، السيرفر فيه ضغط: {str(e)}"
+
+# 6. عرض الشات
+for message in st.session_state.chat_history:
+    role = "assistant" if message["role"] == "model" else "user"
+    with st.chat_message(role):
+        st.write(message["parts"][0]["text"])
+
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث معي..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
