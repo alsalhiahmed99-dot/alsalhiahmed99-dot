@@ -10,27 +10,17 @@ MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة وإصلاح التمرير
+# 3. تصميم الواجهة
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
-    
-    /* إصلاح مشكلة التمرير في الـ APK والأندرويد */
-    html, body, [data-testid="stAppViewContainer"] {
-        overflow: auto !important;
-        height: 100% !important;
-    }
-    .main .block-container {
-        max-width: 100%;
-        padding-bottom: 100px; /* مساحة إضافية عشان الكيبورد ما يغطي الكلام */
-    }
     </style>
 
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
         <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.1 (تحديث التمرير)</div>
+        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.2</div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -73,22 +63,28 @@ def ask_ahmed(text):
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
-# 6. عرض الشات
-for message in st.session_state.chat_history:
-    role = "assistant" if message["role"] == "model" else "user"
-    with st.chat_message(role):
-        st.write(message["parts"][0]["text"])
+# 6. عرض الشات داخل حاوية (لحل مشكلة التمرير)
+chat_container = st.container(height=500, border=False)
+
+with chat_container:
+    for message in st.session_state.chat_history:
+        role = "assistant" if message["role"] == "model" else "user"
+        with st.chat_message(role):
+            st.write(message["parts"][0]["text"])
 
 # 7. خانة الكتابة
 if prompt := st.chat_input("تحدث معي..."):
-    with st.chat_message("user"):
-        st.write(prompt)
+    with chat_container:
+        with st.chat_message("user"):
+            st.write(prompt)
     
     with st.spinner("أحمد AI يفكر بذكاء..."):
         res = ask_ahmed(prompt)
     
-    with st.chat_message("assistant"):
-        st.write(res)
+    with chat_container:
+        with st.chat_message("assistant"):
+            st.write(res)
     
+    # السطرين اللي كانوا ناقصين (حفظ المحادثة)
     st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
     st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
