@@ -4,46 +4,40 @@ from groq import Groq
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
-# 2. مفاتيح التشغيل (مؤمنة عبر Secrets)
+# 2. مفاتيح التشغيل
 try:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except Exception as e:
-    st.error("السموحة بوبدر، مفتاح GROQ_API_KEY ما حصلته في السيكريت!")
+    st.error("السموحة بوبدر، مفتاح GROQ_API_KEY ما موجود!")
     st.stop()
 
-# 3. تصميم الواجهة الاحترافي
+# 3. تصميم الواجهة (ستايل مبرمجنا أحمد الصالحي)
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
     </style>
-    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-        <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
-        <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار 2026 الصاروخي (النسخة المنضبطة)</div>
+    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl;">
+        <h1 style="margin:0;">🤖 أحمد AI PRO</h1>
+        <p style="margin:5px;">تصميم وبرمجة: أحمد الصالحي 🇴🇲</p>
     </div>
     <br>
     """, unsafe_allow_html=True)
 
-# 4. ذاكرة المحادثة
+# 4. الذاكرة
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع الذكاء الاصطناعي
+# 5. الدالة الصارمة لضبط السنع والعماني القح
 def ask_ahmed(text):
-    is_first_reply = len(st.session_state.chat_history) == 0
-    
-    if is_first_reply:
-        extra_info = "في أول رد، سلم بلهجة عمانية هادئة واذكر إنك من برمجة أحمد الصالحي باختصار."
-    else:
-        extra_info = "جاوب على قد السؤال بأسلوب رزين ومحترم."
-
-    # تأكدت هنا أن النص مغلق تماماً ولا يوجد كسر في الأسطر
+    # هنا "تأديب" الموديل عشان يتكلم عماني وما يلف ويدور
     system_instruction = (
-        f"أنت ذكاء اصطناعي رزين وعماني أصلي، مبرمجك هو أحمد الصالحي. {extra_info} "
-        "تحدث بلهجة عمانية بيضاء، رصينة ومفهومة. "
-        "ممنوع الردود العشوائية أو الكلمات الإنجليزية المعربة. "
-        "خلك واثق، رزين، وكلامك منسق مثل كلام المجالس العمانية."
+        "أنت ذكاء اصطناعي عماني رزين وقح، مبرمجك هو أحمد الصالحي. "
+        "ممنوع منعاً باتاً تتكلم فصحى أو تقول 'أنا مبرمج للفصحى' أو 'أنا برنامج'. "
+        "تكلم عماني قح ورزين مثل رجال المجالس. "
+        "ردودك تكون واثقة، وإذا حد سألك عن السنع، قوله: 'أنا مسنع ومتربي على إيد أحمد الصالحي'. "
+        "استخدم كلمات: (هيش، تو، باغي، غايته، علامك، حبابي، نوبه، كذاك). "
+        "خلك ذيب، رزين، ومباشر."
     )
     
     messages = [{"role": "system", "content": system_instruction}]
@@ -57,25 +51,24 @@ def ask_ahmed(text):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
-            temperature=0.7,
-            max_tokens=300
+            temperature=0.8, # رفعناه شوي عشان يكون الكلام طبيعي وغير جامد
         )
         return completion.choices[0].message.content
     except Exception as e:
-        return f"السموحة بوبدر، السيرفر فيه ضغط: {str(e)}"
+        return f"السموحة، السيرفر تعبان شوي."
 
-# 6. عرض الشات
+# 6. العرض
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
+# 7. الإدخال
+if prompt := st.chat_input("تكلم مع أحمد AI..."):
     with st.chat_message("user"):
         st.write(prompt)
     
-    with st.spinner("أحمد AI يفكر..."):
+    with st.spinner("لحظة، أحمد AI يضبط الرد..."):
         res = ask_ahmed(prompt)
     
     with st.chat_message("assistant"):
