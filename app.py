@@ -10,16 +10,27 @@ MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# 3. تصميم الواجهة
+# 3. تصميم الواجهة وإصلاح التمرير
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
+    
+    /* إصلاح مشكلة التمرير في الـ APK والأندرويد */
+    html, body, [data-testid="stAppViewContainer"] {
+        overflow: auto !important;
+        height: 100% !important;
+    }
+    .main .block-container {
+        max-width: 100%;
+        padding-bottom: 100px; /* مساحة إضافية عشان الكيبورد ما يغطي الكلام */
+    }
     </style>
+
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
         <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.0</div>
+        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.1 (تحديث التمرير)</div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -30,7 +41,6 @@ if "chat_history" not in st.session_state:
 
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
-    # فحص إذا كان هذا أول رد في المحادثة
     is_first_reply = len(st.session_state.chat_history) == 0
     
     if is_first_reply:
