@@ -1,43 +1,39 @@
 import streamlit as st
 import requests
 import json
+import time # عشان حركة الانتظار لو صار ضغط
 
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-1.5-flash" # نصيحة: فلاش أسرع وأثبت للجمهور
+# الموديل 8b هو الأسرع والأقل استهلاكاً والأكثر صموداً ضد "ضغط الشبكة"
+MODEL_NAME = "gemini-1.5-flash-8b" 
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# --- ميزة عداد المستخدمين الحقيقي ---
-# هذه الدالة تخزن عدد الزيارات في ذاكرة التطبيق المشتركة بين كل المستخدمين
+# --- العداد الحقيقي ---
 if 'total_visits' not in st.session_state:
-    # ملاحظة: هذا الرقم سيزيد مع كل شخص يفتح التطبيق
-    # إذا توقف السيرفر تماماً قد يصفر، ولحفظه للأبد نستخدم قاعدة بيانات مستقبلاً
-    st.session_state.total_visits = 1 
+    st.session_state.total_visits = 1
 
 with st.sidebar:
-    st.markdown("### 📈 إحصائيات حقيقية")
-    st.metric(label="إجمالي زيارات التطبيق", value=st.session_state.total_visits)
+    st.markdown("### 📈 إحصائيات")
+    st.metric(label="إجمالي الزيارات", value=st.session_state.total_visits)
     st.write("---")
-    
     if st.sidebar.button("🗑️ مسح المحادثة"):
         st.session_state.chat_history = []
         st.rerun()
-        
-    st.info("برمجة وتطوير: أحمد الصالحي 🇴🇲")
+    st.info("الموديل الحالي: Flash 8B (الأسرع)")
 
-# 3. تصميم الواجهة الأصلي
+# 3. تصميم الواجهة (بدون تغيير)
 st.markdown("""
     <style>
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
     </style>
-    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-        <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
-        <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.0</div>
+    <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl;">
+        <h1 style="margin:0;">🤖 أحمد AI PRO</h1>
+        <p style="margin:5px;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -46,39 +42,39 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع جوجل
+# 5. دالة التواصل (المحسنة ضد الضغط)
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
-    if is_first_reply:
-        extra_instruction = "هذا أول رد لك، رحب بلهجة عمانية واذكر فخرك ببرمجة أحمد الصالحي (14 سنة)."
-    else:
-        extra_instruction = "خلك رزين وجاوب مباشرة."
-
-    system_instruction = (
-        f"أنت ذكاء اصطناعي محترف. {extra_instruction} تحدث باللهجة العمانية الرزينة."
-    )
+    intro = "هذا أول رد، رحب بلهجة عمانية وقورة واذكر أنك من برمجة أحمد الصالحي." if is_first_reply else "جاوب مباشرة برزانة."
     
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
+    system_instruction = f"أنت ذكاء اصطناعي محترف. {intro} تحدث باللهجة العمانية الرزينة."
+    
     payload = {
-        "contents": current_history,
+        "contents": st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}],
         "system_instruction": {"parts": [{"text": system_instruction}]}
     }
     
-    try:
-        response = requests.post(URL, json=payload, timeout=15)
-        if response.status_code == 200:
-            return response.json()['candidates'][0]['content']['parts'][0]['text']
-        return "السموحة يا مسندي، السيرفر عليه ضغط حالياً."
-    except:
-        return "مشكلة في الاتصال!"
+    # محاولة الإرسال (حتى 3 مرات لو صار ضغط)
+    for i in range(3):
+        try:
+            response = requests.post(URL, json=payload, timeout=10)
+            if response.status_code == 200:
+                return response.json()['candidates'][0]['content']['parts'][0]['text']
+            elif response.status_code == 429: # كود الضغط
+                time.sleep(2) # انتظر ثانيتين وجرب مرة ثانية
+                continue
+        except:
+            pass
+    
+    return "السموحة يا مسندي، السيرفر عليه زحمة قوية تو، جرب ترسل بعد لحظات."
 
-# 6. عرض الشات
+# 6. العرض
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة
+# 7. الإدخال
 if prompt := st.chat_input("تحدث معي..."):
     with st.chat_message("user"):
         st.write(prompt)
