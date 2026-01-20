@@ -16,11 +16,10 @@ st.markdown("""
     .main { background-color: #0b0e14; }
     .stChatMessage { border-radius: 15px; }
     </style>
-
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
         <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.2</div>
+        <div style="font-size: 0.8em; opacity: 0.8;">إصدار التحديث السريع 1.3</div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -32,20 +31,11 @@ if "chat_history" not in st.session_state:
 # 5. دالة التواصل مع جوجل
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
+    extra_instruction = "رحب بالمستخدم بلهجة عمانية واذكر مبرمجك أحمد." if is_first_reply else "أجب مباشرة بلهجة عمانية رزينة."
     
-    if is_first_reply:
-        extra_instruction = "هذا أول رد لك في المحادثة، رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
-    else:
-        extra_instruction = "هذا ليس الرد الأول، خلك رزين وركز على إجابة السؤال مباشرة ولا تكرر المدح إلا إذا سألك المستخدم عن مبرمجك."
-
-    system_instruction = (
-        f"أنت ذكاء اصطناعي عالمي ومحترف. {extra_instruction} "
-        "تحدث باللغة التي يكلمك بها المستخدم (عماني، عربي فصيح، إنجليزي، إلخ). "
-        "إذا كانت المحادثة بالعربي، فاستخدم اللهجة العمانية القحة والرزينة. "
-        "ممنوع تبدأ رسالتك بذكر اسمك (أحمد AI) لتجنب لخبطة النص. "
-        "تذكر دائماً أنك فخر للصناعة العمانية ومبرمجك هو أحمد بن بدر الصالحي."
-    )
+    system_instruction = f"أنت ذكاء اصطناعي من برمجة أحمد بن بدر الصالحي. {extra_instruction}"
     
+    # نرسل التاريخ بالترتيب الصحيح لجوجل (القديم ثم الجديد)
     current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
     payload = {
@@ -55,36 +45,24 @@ def ask_ahmed(text):
     
     try:
         response = requests.post(URL, json=payload, timeout=15)
-        result = response.json()
         if response.status_code == 200:
-            return result['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return "السموحة يا بوبدر، جوجل يقول فيه ضغط على الشبكة!"
+            return response.json()['candidates'][0]['content']['parts'][0]['text']
+        return "فيه ضغط على الشبكة، جرب مرة ثانية!"
     except:
-        return "مشكلة في الاتصال، حاول مرة ثانية!"
+        return "مشكلة في الاتصال!"
 
-# 6. عرض الشات داخل حاوية (لحل مشكلة التمرير)
-chat_container = st.container(height=500, border=False)
+# 6. خانة الكتابة (خليناها فوق عشان تكون واضحة)
+prompt = st.chat_input("تحدث معي...")
 
-with chat_container:
-    for message in st.session_state.chat_history:
-        role = "assistant" if message["role"] == "model" else "user"
-        with st.chat_message(role):
-            st.write(message["parts"][0]["text"])
-
-# 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
-    with chat_container:
-        with st.chat_message("user"):
-            st.write(prompt)
-    
-    with st.spinner("أحمد AI يفكر بذكاء..."):
+if prompt:
+    with st.spinner("أحمد AI يفكر..."):
         res = ask_ahmed(prompt)
-    
-    with chat_container:
-        with st.chat_message("assistant"):
-            st.write(res)
-    
-    # السطرين اللي كانوا ناقصين (حفظ المحادثة)
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+        # نضيف الجديد في بداية القائمة (Index 0)
+        st.session_state.chat_history.insert(0, {"role": "model", "parts": [{"text": res}]})
+        st.session_state.chat_history.insert(0, {"role": "user", "parts": [{"text": prompt}]})
+
+# 7. عرض الشات (الجديد يظهر أولاً)
+for message in st.session_state.chat_history:
+    role = "assistant" if message["role"] == "model" else "user"
+    with st.chat_message(role):
+        st.write(message["parts"][0]["text"])
