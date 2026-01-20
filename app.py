@@ -29,7 +29,7 @@ st.markdown("""
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 5. دالة التواصل مع الذكاء الاصطناعي (تم تعديل اللهجة هنا)
+# 5. دالة التواصل مع الذكاء الاصطناعي
 def ask_ahmed(text):
     is_first_reply = len(st.session_state.chat_history) == 0
     
@@ -38,7 +38,6 @@ def ask_ahmed(text):
     else:
         extra_instruction = "جاوب على قد السؤال بلهجة عمانية وما لازم تكرر اسم مبرمجك إلا لو سألك."
 
-    # هنا السر في ضبط اللهجة يا أحمد
     system_instruction = (
         f"أنت ذكاء اصطناعي محترف من ابتكار أحمد الصالحي. {extra_instruction} "
         "أريدك تتكلم لهجة عمانية عامية قحة، كأنك جالس في سبلة. "
@@ -58,7 +57,7 @@ def ask_ahmed(text):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=messages,
-            temperature=0.8, # زدنا الـ temperature شوي عشان يكون الكلام طبيعي أكثر
+            temperature=0.8,
         )
         return completion.choices[0].message.content
     except Exception as e:
@@ -70,6 +69,19 @@ for message in st.session_state.chat_history:
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
 
-# 7. خانة الكتابة
+# 7. خانة الكتابة (تم تصحيح المسافات هنا)
 if prompt := st.chat_input("تحدث معي..."):
+    # عرض رسالة المستخدم
     with st.chat_message("user"):
+        st.write(prompt)
+    
+    # تفكير ورد الذكاء الاصطناعي
+    with st.spinner("أحمد AI يفكر..."):
+        res = ask_ahmed(prompt)
+    
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    # حفظ في الذاكرة
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
