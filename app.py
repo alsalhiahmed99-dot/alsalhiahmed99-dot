@@ -8,7 +8,8 @@ st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
 
 # 2. مفاتيح التشغيل
 MY_KEY = st.secrets["GOOGLE_API_KEY"]
-MODEL_NAME = "gemini-3-flash-preview"
+# التغيير هنا فقط لضمان السرعة وعدم الانقطاع
+MODEL_NAME = "gemini-1.5-flash"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
 # --- ميزة عداد المستخدمين (في الشريط الجانبي) ---
