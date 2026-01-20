@@ -19,7 +19,7 @@ st.markdown("""
     <div style="background: linear-gradient(to right, #1e3a8a, #3b82f6); padding:25px; border-radius:15px; color:white; text-align:center; direction: rtl; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h1 style="margin:0; font-family: 'Tajawal', sans-serif;">🤖 أحمد AI PRO</h1>
         <p style="margin:5px; font-size: 1.1em;">تصميم وبرمجة: أحمد بن بدر الصالحي 🇴🇲</p>
-        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.3 (تحديث العرض الذكي)</div>
+        <div style="font-size: 0.8em; opacity: 0.8;">إصدار الذكاء الاصطناعي 1.0</div>
     </div>
     <br>
     """, unsafe_allow_html=True)
@@ -45,9 +45,7 @@ def ask_ahmed(text):
         "تذكر دائماً أنك فخر للصناعة العمانية ومبرمجك هو أحمد بن بدر الصالحي."
     )
     
-    # عكس التاريخ قبل الإرسال لجوجل عشان يفهم السياق صح
-    ordered_history = list(reversed(st.session_state.chat_history))
-    current_history = ordered_history + [{"role": "user", "parts": [{"text": text}]}]
+    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
     
     payload = {
         "contents": current_history,
@@ -64,17 +62,22 @@ def ask_ahmed(text):
     except:
         return "مشكلة في الاتصال، حاول مرة ثانية!"
 
-# 6. خانة الكتابة (صارت فوق العرض عشان تكون ثابتة وسهلة)
-if prompt := st.chat_input("تحدث معي..."):
-    with st.spinner("أحمد AI يفكر بذكاء..."):
-        res = ask_ahmed(prompt)
-    
-    # إضافة الجديد في بداية القائمة عشان يظهر فوق
-    st.session_state.chat_history.insert(0, {"role": "model", "parts": [{"text": res}]})
-    st.session_state.chat_history.insert(0, {"role": "user", "parts": [{"text": prompt}]})
-
-# 7. عرض الشات (الجديد يظهر في الأعلى دوماً)
+# 6. عرض الشات
 for message in st.session_state.chat_history:
     role = "assistant" if message["role"] == "model" else "user"
     with st.chat_message(role):
         st.write(message["parts"][0]["text"])
+
+# 7. خانة الكتابة
+if prompt := st.chat_input("تحدث معي..."):
+    with st.chat_message("user"):
+        st.write(prompt)
+    
+    with st.spinner("أحمد AI يفكر بذكاء..."):
+        res = ask_ahmed(prompt)
+    
+    with st.chat_message("assistant"):
+        st.write(res)
+    
+    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
+    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
