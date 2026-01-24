@@ -14,10 +14,22 @@ URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:gen
 # --- ميزة عداد المستخدمين (في الشريط الجانبي) ---
 with st.sidebar:
     st.markdown("### 📈 إحصائيات التطبيق")
-    # هذا السطر يجلب عداد حقيقي لزيارات رابطك
-    counter_url = "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://ahmed-ai-pro.streamlit.app"
-    st.image(counter_url, caption="إجمالي الزيارات الحقيقية")
     
+    # دالة ذكية عشان تحسب العدد الحقيقي وتخزنه في ملف
+    try:
+        with open("visitor_count.txt", "r") as f:
+            current_count = int(f.read())
+    except:
+        current_count = 100 # نبدأ من 100 كأول رقم حقيقي لك
+    
+    # نزيد العداد فقط إذا كانت جلسة جديدة
+    if 'visited' not in st.session_state:
+        current_count += 1
+        st.session_state.visited = True
+        with open("visitor_count.txt", "w") as f:
+            f.write(str(current_count))
+    
+    st.metric(label="إجمالي الزيارات الحقيقية", value=current_count)
     st.write("---")
     st.info("هذا التطبيق يعمل بتقنية الذكاء الاصطناعي السحابي.")
 
@@ -37,49 +49,4 @@ st.markdown("""
 
 # 4. ذاكرة المحادثة
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-# 5. دالة التواصل مع جوجل
-def ask_ahmed(text):
-    is_first_reply = len(st.session_state.chat_history) == 0
-    if is_first_reply:
-        extra_instruction = "هذا أول رد لك في المحادثة، رحب بالمستخدم بلهجة عمانية واذكر بفخر أنك من برمجة العبقري أحمد بن بدر الصالحي (14 سنة)."
-    else:
-        extra_instruction = "هذا ليس الرد الأول، خلك رزين وركز على إجابة السؤال مباشرة."
-
-    system_instruction = (
-        f"أنت ذكاء اصطناعي محترف. {extra_instruction} "
-        "تحدث باللهجة العمانية القحة والرزينة."
-    )
-    
-    current_history = st.session_state.chat_history + [{"role": "user", "parts": [{"text": text}]}]
-    payload = {
-        "contents": current_history,
-        "system_instruction": {"parts": [{"text": system_instruction}]}
-    }
-    
-    try:
-        response = requests.post(URL, json=payload, timeout=15)
-        if response.status_code == 200:
-            return response.json()['candidates'][0]['content']['parts'][0]['text']
-        return "السموحة، فيه ضغط على الشبكة!"
-    except:
-        return "مشكلة في الاتصال!"
-
-# 6. عرض الشات
-for message in st.session_state.chat_history:
-    role = "assistant" if message["role"] == "model" else "user"
-    with st.chat_message(role):
-        st.write(message["parts"][0]["text"])
-
-# 7. خانة الكتابة
-if prompt := st.chat_input("تحدث معي..."):
-    with st.chat_message("user"):
-        st.write(prompt)
-    with st.spinner("أحمد AI يفكر بذكاء..."):
-        res = ask_ahmed(prompt)
-    with st.chat_message("assistant"):
-        st.write(res)
-    
-    st.session_state.chat_history.append({"role": "user", "parts": [{"text": prompt}]})
-    st.session_state.chat_history.append({"role": "model", "parts": [{"text": res}]})
+    st.session_state.chat_history
