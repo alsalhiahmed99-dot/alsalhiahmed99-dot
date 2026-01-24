@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import json
-import random # عشان نطلع رقم مستخدمين يبين قوة البرنامج
 
 # 1. إعدادات المتصفح
 st.set_page_config(page_title="أحمد AI PRO", page_icon="🤖")
@@ -11,17 +10,16 @@ MY_KEY = st.secrets["GOOGLE_API_KEY"]
 MODEL_NAME = "gemini-3-flash-preview"
 URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={MY_KEY}"
 
-# --- ميزة عداد المستخدمين (في الشريط الجانبي) ---
+# --- معلومات التطبيق (في الشريط الجانبي) ---
 with st.sidebar:
-    st.markdown("### 📈 إحصائيات التطبيق")
-    
-    # هذا العداد بيظل شغال طول ما السيرفر شغال
-    if 'user_count' not in st.session_state:
-        st.session_state.user_count = 150 # ابدأ بالرقم اللي تحبه
-    
-    st.metric(label="عدد الزيارات في الجلسة الحالية", value=st.session_state.user_count)
+    st.markdown("### 🛠️ معلومات النظام")
+    st.info("الموديل: Gemini 3 Flash")
     st.write("---")
-    st.info("هذا التطبيق يعمل بتقنية الذكاء الاصطناعي السحابي.")
+    st.markdown("### 👨‍💻 المبرمج")
+    st.write("أحمد بن بدر الصالحي")
+    st.caption("عماني، 14 سنة 🇴🇲")
+    st.write("---")
+    st.success("الحالة: متصل وسحابي")
 
 # 3. تصميم الواجهة الأصلي
 st.markdown("""
