@@ -14,10 +14,10 @@ URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:gen
 # --- ميزة عداد المستخدمين (في الشريط الجانبي) ---
 with st.sidebar:
     st.markdown("### 📈 إحصائيات التطبيق")
-    if 'user_count' not in st.session_state:
-        st.session_state.user_count = random.randint(150, 200) # رقم افتراضي يبين إن فيه مستخدمين
+    # هذا السطر يجلب عداد حقيقي لزيارات رابطك
+    counter_url = "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://ahmed-ai-pro.streamlit.app"
+    st.image(counter_url, caption="إجمالي الزيارات الحقيقية")
     
-    st.metric(label="عدد المستخدمين النشطين", value=st.session_state.user_count)
     st.write("---")
     st.info("هذا التطبيق يعمل بتقنية الذكاء الاصطناعي السحابي.")
 
